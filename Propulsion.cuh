@@ -324,7 +324,7 @@ public:
         explicit Mandelbrot(unsigned width = 640, unsigned height = 480);
         void simulate();
 
-        Propulsion::Matrix<double> static calculateMandel()
+        Propulsion::Matrix<int> static calculateMandelCPU(unsigned wPixels, unsigned hPixels, double leftBound, double rightBound, double topBound, double bottomBound, unsigned maxIterations);
     };
 
 
