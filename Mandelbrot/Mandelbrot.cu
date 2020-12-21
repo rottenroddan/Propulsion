@@ -4,6 +4,10 @@
 
 #include "../Propulsion.cuh"
 
+#define MAX_ITER 1000
+
+bool activeApp = false;
+
 
 Propulsion::Mandelbrot::Mandelbrot(unsigned int width, unsigned int height)
 {
@@ -22,8 +26,27 @@ void PaintWindow( HWND hwnd , unsigned pixelWidth, unsigned pixelHeight)
 
     int c = 0xf3f200;
 
-    Propulsion::Matrix<int> Mandel = Propulsion::Mandelbrot::calculateMandelCPU(pixelWidth, pixelHeight, -2, 1, 1, -1, 500);
-    std::cout << Mandel.at(300,300);
+
+    // Start clock for mandel calculation
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
+    Propulsion::Matrix<int> Mandel = Propulsion::Mandelbrot::calculateMandelCPU(pixelWidth, pixelHeight, -3.0, 3.0, 2, -2, MAX_ITER);
+
+    // Calculate total copy constructor time + process time.
+    std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+    float milliseconds = (float) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000;
+
+    std::cout << std::left << std::setw(TIME_FORMAT) << " HOST:  Mandel Copy + Calculate Time: " <<
+              std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
+              " ms." <<  std::endl;
+
+
+    // Start clock for mandel calculation
+    std::chrono::high_resolution_clock::time_point startDraw = std::chrono::high_resolution_clock::now();
+
+    int arr[] = {0x000000,0x888888, 0x888888, 0x888888};
+
+    auto x = CreateBitmap(2, 2, 1, 32,  arr);
 
     for(unsigned i = 0; i < pixelHeight; i++)
     {
@@ -32,6 +55,15 @@ void PaintWindow( HWND hwnd , unsigned pixelWidth, unsigned pixelHeight)
             SetPixel(hdc, j, i, Mandel(i,j));
         }
     }
+
+    // Calculate total copy constructor time + process time.
+    std::chrono::high_resolution_clock::time_point endDraw = std::chrono::high_resolution_clock::now();
+    milliseconds = (float) std::chrono::duration_cast<std::chrono::microseconds>(endDraw - startDraw).count() / 1000;
+
+    std::cout << std::left << std::setw(TIME_FORMAT) << " HOST:  Mandel Draw Time: " <<
+              std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
+              " ms." <<  std::endl;
+
 
     ReleaseDC(hwnd,hdc);
 }
@@ -48,6 +80,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_KEYDOWN:
         if(wParam != VK_ESCAPE)
         {
+            // If 'Q'
             if(wParam == 0x51)
             {
                 PaintWindow(hwnd, rect.right, rect.bottom );
@@ -62,18 +95,24 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             DestroyWindow(hwnd);
             break;
-    }
+        }
     case WM_CLOSE:
         DestroyWindow(hwnd);
         break;
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
-    /*
+
+    case WM_ACTIVATEAPP:
+        if(activeApp != true)
+        {
+            activeApp = true;
+            PaintWindow(hwnd, rect.right, rect.bottom);
+        }
+        break;
+
     case WM_PAINT:
-        std::cout << "The Fuck" << std::endl;
-        PaintWindow(hwnd);
-        return 0;*/
+        return 0;
     default:
         //std::cout << "Itter" <<  ++i<< std::endl;
         break;
@@ -182,9 +221,10 @@ Propulsion::Matrix<int> Propulsion::Mandelbrot::calculateMandelCPU(unsigned int 
             }
             else
             {
-                int c = 0xFFFFFF;
+                int color = 0x000000;
                 double difference = (double)n/(double)maxIterations;
 
+                /*
                 if(difference < .25)
                 {
                     c = 0xFF0000;
@@ -196,12 +236,28 @@ Propulsion::Matrix<int> Propulsion::Mandelbrot::calculateMandelCPU(unsigned int 
                 else if(difference < .75)
                 {
                     c = 0xFF0000;
-                }
+                }*/
+
+                double red = 0xff;
+                double green = 0xff;
+                double blue = 0xff;
+
+                double compliment = 1 - difference;
+
+                // Alter towards the compliment, meaning a small difference -> white.
+                red     = red   * compliment;
+                green   = green * compliment;
+                blue    = blue  * compliment;
+
+                color += ((int)blue) << 16;
+                color += ((int)green) << 8;
+                color += ((int)red);
+
 
 
 
                 // Set to White
-                Mandelset(i,j) = c;
+                Mandelset(i,j) = color;
                 //std::cout << "Failed at: " << n << " " << realXValue << " " << complexYValue << std::endl;
             }
         }

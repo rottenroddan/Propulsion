@@ -47,6 +47,8 @@
 #include <future>       // promises, futures
 
 #include <windows.h>
+#include <gdiplus.h>
+
 
 // Cuda Library etc.
 #include "cuda_runtime.h"
