@@ -43,8 +43,10 @@
 
 #include <time.h>       // random
 
-#include <thread>       // Multithreading.
+#include <mutex>        // Mutex come on.
 #include <future>       // promises, futures
+#include <thread>       // Multithreading.
+
 
 #include <windows.h>
 #include <gdiplus.h>
@@ -313,9 +315,26 @@ public:
 
     class Mandelbrot {
     private:
-        unsigned widthPixels;
-        unsigned heightPixels;
+        std::unique_ptr< Propulsion::Matrix< int>> Mandel = nullptr;
+        std::unique_ptr< Propulsion::Matrix< int>> lastMandel = nullptr;
+
+        long windowWidthPixels;
+        long windowHeightPixels;
+        long clientWidthPixels;
+        long clientHeightPixels;
+
+        double leftBound;
+        double rightBound;
+        double topBound;
+        double bottomBound;
+
         WNDCLASSA* windowClass;
+        HWND hwnd = nullptr;
+
+
+        std::mutex mandelMutex;
+
+        void paintWindow();
 
     public:
         /*
@@ -323,10 +342,11 @@ public:
          * @param width Total size of horizontal pixels on window creation.
          * @param height Total size of height pixels on window creation.
          */
-        explicit Mandelbrot(unsigned width = 640, unsigned height = 480);
+        explicit Mandelbrot(unsigned width = 640, unsigned height = 480, double leftBound = -2.0, double rightBound = 2.0, double topBound = 2.0, double bottomBound = -2.0);
+
         void simulate();
 
-        Propulsion::Matrix<int> static calculateMandelCPU(unsigned wPixels, unsigned hPixels, double leftBound, double rightBound, double topBound, double bottomBound, unsigned maxIterations);
+        std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelCPU(unsigned wPixels, unsigned hPixels, double leftBound, double rightBound, double topBound, double bottomBound, unsigned maxIterations);
     };
 
 

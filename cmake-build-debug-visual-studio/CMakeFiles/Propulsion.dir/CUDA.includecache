@@ -31,6 +31,14 @@ C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
 C:/Users/steve/CLionProjects/Propulsion/Mandelbrot/Mandelbrot.cu
 ../Propulsion.cuh
 C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
+d2d1.h
+-
+d2d1helper.h
+-
+dwrite.h
+-
+wincodec.h
+-
 
 C:/Users/steve/CLionProjects/Propulsion/Matrix.cu
 Propulsion.cuh
@@ -73,9 +81,11 @@ string
 -
 time.h
 -
-thread
+mutex
 -
 future
+-
+thread
 -
 windows.h
 -

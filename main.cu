@@ -685,6 +685,7 @@ int main()
 
     //Propulsion::hostAdd1DArraysInt32AVX256(a,b,c,sz);
 
+
     std::cout << std::endl;
 
     Propulsion::Mandelbrot M(640,480);
@@ -692,6 +693,9 @@ int main()
 
 
     std::cout << "Yes!~" << std::endl;
+    std::cout << sizeof(long double) << std::endl;
+    std::cout << sizeof(double) << std::endl;
+    std::cout << sizeof(float) << std::endl;
 
 
     return 0;
