@@ -131,7 +131,7 @@ Propulsion::Matrix<type>::Matrix(type *array, unsigned rows, unsigned cols, Matr
 template<typename type>
 Propulsion::Matrix<type>::~Matrix()
 {
-
+    //M.reset();
     //this->M = nullptr;
 }
 
@@ -1127,6 +1127,35 @@ void Propulsion::Matrix<type>::randomRealDistribution(std::shared_ptr<Matrix<typ
 }
 
 template<typename type>
+Propulsion::Matrix<type> Propulsion::Matrix<type>::sumRows(Matrix<type> &&A)
+{
+    // create return object, give it size of the rows from A, 1 for columns.
+    Propulsion::Matrix<type> ret;
+    ret.rows = A.rows;
+    ret.cols = 1;
+    ret.totalSize = A.rows;
+    ret.M = std::make_unique<type[]>(ret.totalSize);
+
+    for(unsigned i = 0; i < A.rows; i++)
+    {
+        // Sum starts from zero.
+        type sum = (type)0;
+
+        // Loop through all of A, adding the elements on the same row.
+        for(unsigned j = 0; j < A.cols; j++)
+        {
+            // populate the sum var.
+            sum += A.at(i,j);
+        }
+
+        // Return matrix is populated with sum at every i value.
+        ret.at(i) = sum;
+    }
+
+    return ret;
+}
+
+template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::sumRows(Matrix<type> &A)
 {
     // create return object, give it size of the rows from A, 1 for columns.
@@ -1150,6 +1179,35 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::sumRows(Matrix<type> &A)
 
         // Return matrix is populated with sum at every i value.
         ret.at(i) = sum;
+    }
+
+    return ret;
+}
+
+template<typename type>
+Propulsion::Matrix<type> Propulsion::Matrix<type>::sumCols(Matrix<type> &&A)
+{
+    // create return object, give it size of the rows from A, 1 for columns.
+    Propulsion::Matrix<type> ret;
+    ret.rows = 1;
+    ret.cols = A.cols;
+    ret.totalSize = A.cols;
+    ret.M = std::make_unique<type[]>(ret.totalSize);
+
+    for(unsigned j = 0; j < A.cols; j++)
+    {
+        // Sum starts from zero.
+        type sum = (type)0;
+
+        // Loop through all of A, adding the elements on the same row.
+        for(unsigned i = 0; i < A.rows; i++)
+        {
+            // populate the sum var.
+            sum += A.at(i,j);
+        }
+
+        // Return matrix is populated with sum at every i value.
+        ret.at(j) = sum;
     }
 
     return ret;

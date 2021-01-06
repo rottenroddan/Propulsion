@@ -6,7 +6,9 @@ CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\ActivationSigmoid.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\ActivationSoftmax.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\ArtificialNeuralNetwork.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\LayerDense.cu
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\LossFunctions.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Mandelbrot\Mandelbrot.cu
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\Mandelbrot\MandelbrotKernel.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Matrix.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\MatrixNumerical.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Propulsion.cu

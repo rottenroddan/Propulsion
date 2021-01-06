@@ -15,6 +15,7 @@ Propulsion::ArtificialNeuralNetwork::LayerDense::LayerDense(unsigned nInputs, un
     // Create the bias layer with 1 row and N->Neurons columns. Since each neuron has some bias.
     biases = std::make_shared<Matrix<double>>(1,nNeurons,Matrix<double>::MatrixInitVal::zero);
 
+    // Generate random weight valaues now.
     Propulsion::Matrix<double>::randomRealDistribution( weights, -1, 1);
 
     // multiply by 0.10 to minimize the random values.
@@ -39,17 +40,26 @@ void Propulsion::ArtificialNeuralNetwork::LayerDense::forward(Propulsion::Matrix
 
 void Propulsion::ArtificialNeuralNetwork::LayerDense::printWeights()
 {
-    this->weights->print();
+    if(this->weights)
+        this->weights->print();
+    else
+        std::cout << "Weights are currently empty" << std::endl;
 }
 
 void Propulsion::ArtificialNeuralNetwork::LayerDense::printBiases()
 {
-    this->biases->print();
+    if(this->biases)
+        this->biases->print();
+    else
+        std::cout << "Biases are currently empty" << std::endl;
 }
 
 void Propulsion::ArtificialNeuralNetwork::LayerDense::printOutputLayer()
 {
-    this->outputLayer->print();
+    if(this->outputLayer)
+        this->outputLayer->print();
+    else
+        std::cout << "Output layer is currently empty" << std::endl;
 }
 
 std::shared_ptr<Propulsion::Matrix < double>> Propulsion::ArtificialNeuralNetwork::LayerDense::getWeights() {

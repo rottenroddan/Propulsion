@@ -18,5 +18,10 @@ void Propulsion::ArtificialNeuralNetwork::ActivationSigmoid::forward(LayerDense 
 
 void Propulsion::ArtificialNeuralNetwork::ActivationSigmoid::printOutputLayer()
 {
-    this->outputLayer->print();
+    // If output layer isn't empty
+    if(this->outputLayer)
+        this->outputLayer->print();
+    // Else its empty.
+    else
+        std::cout << "Output Layer is null currently" << std::endl;
 }

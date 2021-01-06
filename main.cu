@@ -657,9 +657,6 @@ void furryTestClassifier()
 
 int main()
 {
-    //test_one_dimensional_array_operations();
-    //Propulsion::helloWorld();
-
     std::cout << std::endl << std::endl <<
               " 222222222222222         DDDDDDDDDDDDD\n" <<
               "2:::::::::::::::22       D::::::::::::DDD\n" <<
@@ -681,21 +678,13 @@ int main()
 
     //test_one_dimensional_array_operations();
 
-    //furryTestClassifier();
-
-    //Propulsion::hostAdd1DArraysInt32AVX256(a,b,c,sz);
+    furryTestClassifier();
 
 
-    std::cout << std::endl;
 
-    Propulsion::Mandelbrot M(640,480);
-    M.simulate();
+    //Propulsion::Mandelbrot M(640,480);
+    //M.simulate();
 
-
-    std::cout << "Yes!~" << std::endl;
-    std::cout << sizeof(long double) << std::endl;
-    std::cout << sizeof(double) << std::endl;
-    std::cout << sizeof(float) << std::endl;
 
 
     return 0;

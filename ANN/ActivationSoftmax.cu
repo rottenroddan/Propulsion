@@ -5,19 +5,20 @@
 
 void Propulsion::ArtificialNeuralNetwork::ActivationSoftmax::forward(LayerDense &input)
 {
+    /*
     double sArr[] = { 1,2,3,
                     1,2,3,
                     2,4,6,
                     4,8,12};
-    Propulsion::Matrix<double> sInp(sArr,4,3);
+    Propulsion::Matrix<double> sInp(sArr,4,3);*/
 
     // Store a shared ptr of the output layer.
-    //auto inputMatrixPtr = input.getOutputLayer();
-    auto inputMatrixPtr = &sInp;
+    auto inputMatrixPtr = input.getOutputLayer();
 
     // Output layer is now init. to the same size of the input ptr.
     outputLayer = std::make_shared<Matrix<double>>(inputMatrixPtr->getRowSize(), inputMatrixPtr->getColSize());
 
+    // Get max value from input matrix.
     double max = inputMatrixPtr->getMax();
 
     // Unnormalized values
@@ -29,19 +30,24 @@ void Propulsion::ArtificialNeuralNetwork::ActivationSoftmax::forward(LayerDense 
         expValues.at(i) = std::exp(expValues.at(i));
     }
 
+    // Get the sum of each row as a matrix.
     auto rowSumOfExp = Matrix<double>::sumRows(expValues);
-    Matrix<double> probabilities(expValues.getRowSize(),expValues.getColSize());
+
+
 
     for(unsigned i = 0; i < rowSumOfExp.getTotalSize(); i++)
     {
-        for(unsigned j = 0; j < probabilities.getColSize(); j++)
+        for(unsigned j = 0; j < this->outputLayer->getColSize(); j++)
         {
-            probabilities.at(i,j) = expValues.at(i,j) / rowSumOfExp.at(i);
+            this->outputLayer->at(i,j) = expValues.at(i,j) / rowSumOfExp.at(i);
         }
     }
 
-    probabilities.print();
+}
 
+std::shared_ptr<Propulsion::Matrix<double> > Propulsion::ArtificialNeuralNetwork::ActivationSoftmax::getOutputLayer()
+{
+    return this->outputLayer;
 }
 
 void Propulsion::ArtificialNeuralNetwork::ActivationSoftmax::printOutputLayer()

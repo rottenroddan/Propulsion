@@ -26,11 +26,12 @@
 #include <chrono>       // chrono objects
 #include <cstdio>       // Hmmmm?
 #include <cmath>        // floor, ceil.
+#include <numeric>
 #include <exception>    // Exception handling.
 
 #include <immintrin.h>  // AVX256
 #include <smmintrin.h>
-#include <zmmintrin.h>  // AVX512 which i dont have
+#include <zmmintrin.h>  // AVX512 which I dont have
 #include <typeinfo>     // For template info on AVX. Really dumb but only dynamic way I can think of?
 
 
@@ -234,7 +235,9 @@ public:
 
         static Matrix<type> addBroadScalar(Matrix<type> &A, type s);
         static Matrix<type> subtractBroadScalar(Matrix<type> &A, type s);
+        static Matrix<type> sumRows(Matrix<type> &&A);
         static Matrix<type> sumRows(Matrix<type> &A);
+        static Matrix<type> sumCols(Matrix<type> &&A);
         static Matrix<type> sumCols(Matrix<type> &A);
 
 
@@ -317,6 +320,13 @@ public:
     private:
         std::unique_ptr< Propulsion::Matrix< int>> Mandel = nullptr;
         std::unique_ptr< Propulsion::Matrix< int>> lastMandel = nullptr;
+        std::unique_ptr< Propulsion::Matrix< unsigned>> epoch = nullptr;
+        std::shared_ptr< Propulsion::Matrix< int>> colorPicker = nullptr;
+
+
+        unsigned iterations;
+        unsigned currentEpochSelection = 0;
+
 
         long windowWidthPixels;
         long windowHeightPixels;
@@ -327,6 +337,11 @@ public:
         double rightBound;
         double topBound;
         double bottomBound;
+        double zoomFactor;
+
+        bool redraw = false;
+        bool calculateWithCUDA = true;
+
 
         WNDCLASSA* windowClass;
         HWND hwnd = nullptr;
@@ -335,6 +350,9 @@ public:
         std::mutex mandelMutex;
 
         void paintWindow();
+        void zoomInOnCursor();
+        void zoomOutOnCursor();
+        void generateColorScheme(unsigned totalColors);
 
     public:
         /*
@@ -342,11 +360,12 @@ public:
          * @param width Total size of horizontal pixels on window creation.
          * @param height Total size of height pixels on window creation.
          */
-        explicit Mandelbrot(unsigned width = 640, unsigned height = 480, double leftBound = -2.0, double rightBound = 2.0, double topBound = 2.0, double bottomBound = -2.0);
+        explicit Mandelbrot(unsigned width = 640, unsigned height = 480, double leftBound = -2.0, double rightBound = 2.0, double topBound = 2.0, double bottomBound = -2.0, double zoomFactor = .250);
 
         void simulate();
 
-        std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelCPU(unsigned wPixels, unsigned hPixels, double leftBound, double rightBound, double topBound, double bottomBound, unsigned maxIterations);
+        std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelSingleThreaded(unsigned wPixels, unsigned hPixels, double leftBound, double rightBound, double topBound, double bottomBound, unsigned maxIterations, std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
+        std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelCUDA(unsigned wPixels, unsigned hPixels, double leftBound, double rightBound, double topBound, double bottomBound, unsigned maxIterations, std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
     };
 
 
@@ -356,9 +375,9 @@ public:
         class LayerDense
         {
         private:
-            std::shared_ptr<Matrix<double>> weights;
-            std::shared_ptr<Matrix<double>> biases;
-            std::shared_ptr<Matrix<double>> outputLayer;
+            std::shared_ptr<Matrix<double>> weights = nullptr;
+            std::shared_ptr<Matrix<double>> biases = nullptr;
+            std::shared_ptr<Matrix<double>> outputLayer = nullptr;
         public:
             LayerDense(unsigned nInputs, unsigned nNeurons);
 
@@ -380,7 +399,7 @@ public:
             std::shared_ptr<Matrix<double>> outputLayer;
         public:
             void forward(LayerDense &input);
-
+            std::shared_ptr<Matrix<double>> getOutputLayer();
             void printOutputLayer();
         };
 
@@ -390,18 +409,36 @@ public:
             std::shared_ptr<Matrix<double>> outputLayer;
         public:
             void forward(LayerDense &input);
-
+            std::shared_ptr<Matrix<double>> getOutputLayer();
             void printOutputLayer();
         };
 
         class ActivationSoftmax
         {
+        private:
             std::shared_ptr<Matrix<double>> outputLayer;
         public:
             void forward(LayerDense &input);
-
+            std::shared_ptr<Matrix<double>> getOutputLayer();
             void printOutputLayer();
         };
+
+        class Loss
+        {
+        private:
+            double loss;
+        public:
+            double regularization(Matrix<double> &output, Matrix<double> &y);
+        };
+
+        class LossCategoricalCrossentropy : public Loss
+        {
+        private:
+        public:
+            bool calculate(std::shared_ptr<Matrix<double>> y_pred, std::shared_ptr<Matrix<double>> y_true);
+        };
+
+
 
         void test();
     };
@@ -687,11 +724,13 @@ public:
 
 
 #include "ANN/ArtificialNeuralNetwork.cu"
-#include "ANN/LayerDense.cu"
 #include "ANN/ActivationReLU.cu"
 #include "ANN/ActivationSigmoid.cu"
 #include "ANN/ActivationSoftmax.cu"
+#include "ANN/LayerDense.cu"
+#include "ANN/LossFunctions.cu"
 #include "Mandelbrot/Mandelbrot.cu"
+#include "Mandelbrot/MandelbrotKernel.cu"
 #include "Matrix.cu"
 #include "MatrixNumerical.cu"
 #include "PropulsionVectorOperations.cu"        // Vector Operations

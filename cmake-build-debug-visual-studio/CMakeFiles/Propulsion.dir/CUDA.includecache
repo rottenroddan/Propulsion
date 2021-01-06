@@ -28,6 +28,10 @@ C:/Users/steve/CLionProjects/Propulsion/ANN/Propulsion.cuh
 ../Propulsion.cuh
 C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
 
+C:/Users/steve/CLionProjects/Propulsion/ANN/LossFunctions.cu
+../Propulsion.cuh
+C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
+
 C:/Users/steve/CLionProjects/Propulsion/Mandelbrot/Mandelbrot.cu
 ../Propulsion.cuh
 C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
@@ -39,6 +43,10 @@ dwrite.h
 -
 wincodec.h
 -
+memory
+-
+
+C:/Users/steve/CLionProjects/Propulsion/Mandelbrot/MandelbrotKernel.cu
 
 C:/Users/steve/CLionProjects/Propulsion/Matrix.cu
 Propulsion.cuh
@@ -58,6 +66,8 @@ chrono
 cstdio
 -
 cmath
+-
+numeric
 -
 exception
 -
@@ -97,16 +107,20 @@ device_launch_parameters.h
 C:/Users/steve/CLionProjects/Propulsion/device_launch_parameters.h
 ANN/ArtificialNeuralNetwork.cu
 C:/Users/steve/CLionProjects/Propulsion/ANN/ArtificialNeuralNetwork.cu
-ANN/LayerDense.cu
-C:/Users/steve/CLionProjects/Propulsion/ANN/LayerDense.cu
 ANN/ActivationReLU.cu
 C:/Users/steve/CLionProjects/Propulsion/ANN/ActivationReLU.cu
 ANN/ActivationSigmoid.cu
 C:/Users/steve/CLionProjects/Propulsion/ANN/ActivationSigmoid.cu
 ANN/ActivationSoftmax.cu
 C:/Users/steve/CLionProjects/Propulsion/ANN/ActivationSoftmax.cu
+ANN/LayerDense.cu
+C:/Users/steve/CLionProjects/Propulsion/ANN/LayerDense.cu
+ANN/LossFunctions.cu
+C:/Users/steve/CLionProjects/Propulsion/ANN/LossFunctions.cu
 Mandelbrot/Mandelbrot.cu
 C:/Users/steve/CLionProjects/Propulsion/Mandelbrot/Mandelbrot.cu
+Mandelbrot/MandelbrotKernel.cu
+C:/Users/steve/CLionProjects/Propulsion/Mandelbrot/MandelbrotKernel.cu
 Matrix.cu
 C:/Users/steve/CLionProjects/Propulsion/Matrix.cu
 MatrixNumerical.cu

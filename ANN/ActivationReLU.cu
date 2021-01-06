@@ -6,6 +6,8 @@
 
 void Propulsion::ArtificialNeuralNetwork::ActivationReLU::forward(LayerDense &input)
 {
+    const double RELU_ZERO = 0.0;
+
     // Just store a shared pointer of inputMatrix
     auto inputMatrixPtr = input.getOutputLayer();
 
@@ -15,7 +17,7 @@ void Propulsion::ArtificialNeuralNetwork::ActivationReLU::forward(LayerDense &in
     // For each i in Input, we find the Max of 0 or that value.
     for(unsigned i = 0; i < outputLayer->getTotalSize(); i++)
     {
-        outputLayer->at(i) = std::max(0.0, inputMatrixPtr->at(i));
+        outputLayer->at(i) = (inputMatrixPtr->at(i) > RELU_ZERO ? inputMatrixPtr->at(i) : RELU_ZERO);
     }
 }
 
