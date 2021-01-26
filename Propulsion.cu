@@ -4,6 +4,23 @@
 #pragma once
 #include "Propulsion.cuh"
 
+
+/*
+ * Nice Wrapper function provided by:
+ * https://stackoverflow.com/questions/14038589/what-is-the-canonical-way-to-check-for-errors-using-the-cuda-runtime-api
+ */
+
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+    if (code != cudaSuccess)
+    {
+        fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+        if (abort) exit(code);
+    }
+}
+
+
 __global__ void deviceHelloWorld()
 {
     if(threadIdx.x == 1023)
@@ -53,11 +70,6 @@ template<typename type> __global__ void deviceAdd1DMatrices(type *dev_a, type *d
 
 template<typename type>
 void Propulsion::cudaAdd1DArrays(type *a, type *b, type *c, unsigned C, bool printTime) {
-    /*if(C > CUDA_NO_STRIDE_MAX_THREADS)
-    {
-        std::cout << "--------cudaAdd1DMatrice requires the array size less than 65536---------" << std::endl;
-        return;
-    }*/
     // Start Timer
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -334,7 +346,7 @@ __global__ void deviceMultiplyMatrices(type *dev_a, type *dev_b, type *dev_c, un
 }
 
 template<typename type>
-void Propulsion::cudaMultiply1DArrays(type *a, type *b, type *c, unsigned ROWS, unsigned AcolsBRows,unsigned COLS, bool printTime)
+void Propulsion::cudaDotProduct(type *a, type *b, type *c, unsigned ROWS, unsigned aColsBRows, unsigned COLS, bool printTime)
 {
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -344,13 +356,13 @@ void Propulsion::cudaMultiply1DArrays(type *a, type *b, type *c, unsigned ROWS, 
     type *dev_a, *dev_b, *dev_c;
 
     // Create memory for dev_a/b/c... It is created via R(rows) * C(columns) * type(size of type like int, float, etc).
-    cudaMalloc((void**) &dev_a, ROWS * sizeof(type) * AcolsBRows);
-    cudaMalloc((void**) &dev_b, AcolsBRows * sizeof(type) * COLS);
+    cudaMalloc((void**) &dev_a, ROWS * sizeof(type) * aColsBRows);
+    cudaMalloc((void**) &dev_b, aColsBRows * sizeof(type) * COLS);
     cudaMalloc((void**) &dev_c, ROWS * sizeof(type) * COLS);
 
     // Copy data from host to device.
-    cudaMemcpy(dev_a, a, ROWS * sizeof(type) * AcolsBRows, cudaMemcpyHostToDevice);
-    cudaMemcpy(dev_b, b, AcolsBRows * sizeof(type) * COLS, cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_a, a, ROWS * sizeof(type) * aColsBRows, cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_b, b, aColsBRows * sizeof(type) * COLS, cudaMemcpyHostToDevice);
 
     // block of threads.
     dim3 block_dim(32,32);
@@ -363,7 +375,7 @@ void Propulsion::cudaMultiply1DArrays(type *a, type *b, type *c, unsigned ROWS, 
 
     // start timer.
     cudaEventRecord(start);
-    deviceMultiplyMatrices<<<grid_dim,block_dim>>>(dev_a,dev_b,dev_c, ROWS, AcolsBRows, COLS);
+    deviceMultiplyMatrices<<<grid_dim,block_dim>>>(dev_a, dev_b, dev_c, ROWS, aColsBRows, COLS);
 
     cudaEventRecord(stop);
 
@@ -390,6 +402,90 @@ void Propulsion::cudaMultiply1DArrays(type *a, type *b, type *c, unsigned ROWS, 
     return;
 }
 
+template<typename type>
+void Propulsion::hostSchurProduct(type *a, type *b, type *c, unsigned int C, bool printTime) {
+    // Create starting point for timer
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+    for(unsigned i = 0; i < C; i++)
+    {
+        c[i] = a[i] * b[i]; // ai * bi = ci
+    }
+    if(printTime){
+        // Create ending point for timer.
+        std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+        float milliseconds = (float) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000;
+
+        std::cout << std::left << std::setw(TIME_FORMAT) << " HOST:  Schur Product: " <<
+                  std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
+                  " ms." << std::setw(TIME_WIDTH) << (C * sizeof(type)) / milliseconds / 1e6 << " GB/s" << std::endl;
+    }
+    return;
+}
+
+template <typename type> __global__ void deviceSchurProduct(type *dev_a, type *dev_b, type *dev_c, unsigned C)
+{
+    int tID = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = blockDim.x * gridDim.x;
+    for(int i = tID; i < C; i += stride)
+    {
+        dev_c[i] = dev_a[i] * dev_b[i];
+    }
+}
+
+
+template<typename type>
+void Propulsion::cudaSchurProduct(type *a, type *b, type *c, unsigned C, bool printTime)
+{
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    // Create device array pointers.
+    type *dev_a, *dev_b, *dev_c;
+
+    // Create memory for dev_a/b/c... It is created via R(rows) * C(columns) * type(size of type like int, float, etc).
+    cudaMalloc((void**) &dev_a, C * sizeof(type));
+    cudaMalloc((void**) &dev_b, C * sizeof(type));
+    cudaMalloc((void**) &dev_c, C * sizeof(type));
+
+    // Copy data from host to device.
+    cudaMemcpy(dev_a, a, C * sizeof(type), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_b, b, C * sizeof(type), cudaMemcpyHostToDevice);
+
+    int blockSize = MAX_THREADS;
+    int numBlocks = (C + blockSize - 1) / blockSize;
+
+    // Start cuda timer
+    cudaEventRecord(start);
+
+    // Start Division Kernel
+    deviceSchurProduct<<<numBlocks,blockSize>>>(dev_a,dev_b,dev_c, C);
+
+    // Record Cuda end time.
+    cudaEventRecord(stop);
+
+    // Copy the data from device c to c.
+    cudaMemcpy(c, dev_c, C*sizeof(type), cudaMemcpyDeviceToHost);
+
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // Free Memory in Device.
+    cudaFree(dev_a);
+    cudaFree(dev_b);
+    cudaFree(dev_c);
+
+    if(printTime){
+        std::cout << std::left << std::setw(TIME_FORMAT) << " CUDA:  1D Array Division with Stride: " <<
+                  std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
+                  " ms." << std::setw(TIME_WIDTH) << (C * sizeof(type)) / milliseconds / 1e6 << " GB/s" << std::endl;
+    }
+
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+    return;
+}
 
 template <typename type> __global__ void deviceDivide1DMatricesStride(type *dev_a, type *dev_b, type *dev_c, unsigned C)
 {
@@ -1268,3 +1364,66 @@ void Propulsion::hostStencilSum1DArrays(type * a, type * c, unsigned C, unsigned
     return;
 }
 
+template <typename type>
+__global__ void deviceCopyArray(type *dev_a, type *dev_b, unsigned totalSize)
+{
+    unsigned tID = blockIdx.x * blockDim.x + threadIdx.x;
+    if(tID < totalSize)
+    {
+        dev_b[tID] = dev_a[tID];
+    }
+}
+
+
+template<typename type>
+void Propulsion::cudaCopyArray(type *a, type *b, unsigned int totalSize, bool printTime)
+{
+    // Start Timer
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    // Create device array pointers.
+    type *dev_a, *dev_b;
+
+    // Create memory for dev_a/b/c... It is created via R(rows) * C(columns) * type(size of type like int, float, etc).
+    cudaMalloc((void**) &dev_a, totalSize * sizeof(type));
+    cudaMalloc((void**) &dev_b, totalSize * sizeof(type));
+
+    cudaMemcpy(dev_a, a, totalSize*sizeof(type), cudaMemcpyHostToDevice);
+
+    // block of threads.
+    dim3 block_dim(MAX_THREADS,1);
+
+    // total blocks of threads in x direction
+    unsigned blocks = std::ceil( ( (double)totalSize) / ( (double)block_dim.x) );
+
+    dim3 grid_dim(blocks, 1);
+
+    // start timer.
+    cudaEventRecord(start);
+    deviceCopyArray<<<grid_dim,block_dim>>>(dev_a,dev_b,totalSize);
+
+    cudaEventRecord(stop);
+
+    // Copy the data from device c to c.
+    cudaMemcpy(b, dev_b, totalSize*sizeof(type), cudaMemcpyDeviceToHost);
+
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // Free Memory in Device.
+    cudaFree(dev_a);
+    cudaFree(dev_b);
+
+    if(printTime){
+        std::cout << std::left << std::setw(TIME_FORMAT) << " CUDA:  Copy Array: " <<
+                  std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
+                  " ms." << std::setw(TIME_WIDTH) << std::endl;
+    }
+
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+    return;
+}

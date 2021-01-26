@@ -58,7 +58,7 @@
 #include "device_launch_parameters.h"
 
 
-
+// 256bits -> 32 bytes
 #define AVX256BYTES 32
 
 #define HOST_STRASSEN_LEAF_SIZE 256
@@ -74,20 +74,79 @@
 #define MATRIX_CUDA_STRASSEN_LEAF_SIZE 2048
 // threshold where a 9900k starts to lose to the 2080ti.
 #define MATRIX_CUDA_ADD_DIFF_ELEM_SIZE 200000
+#define MATRIX_CUDA_DOT_ELEM_SIZE 100000
+#define MATRIX_COPY_SIZE_DIFF 2000000
 
-class Propulsion {
-public:
+namespace Propulsion {
+
+    /*
+     * Class:       Matrix
+     *
+     * Purpose:         The purpose of this class is to manage a Matrix class as
+     *              part of the Propulsion namespace. Simply, the Matrix class is
+     *              a type array, in which is managed by two dimension vars: rows
+     *              & cols. This class is also encapsulated by the Artificial Neural
+     *              Network classes and Mandelbrot class. This will also be used by
+     *              future classes.
+     *
+     *                  This class also uses CUDA and/or AVX2 when it can where speed-ups
+     *              are implemented to do so. While many of the algorithms are naive, the
+     *              speed boosts are significant enough anyways.
+     *
+     *              TO-DO:
+     *              -isIdentityMatrix
+     *              -cudaTranspose
+     *              -avxTranspose
+     *              -ANN stuff
+     */
     template<typename type>
     class Matrix
     {
     public:
+        class MatrixException : public std::exception
+        {
+        private:
+            const char* file;
+            int line;
+            const char* func;
+            const char* info;
+        public:
+            MatrixException(const char* msg, const char* file_,
+                            int line_, const char* func_, const char* info_ = "") :
+                            std::exception(msg),
+                            file(file_),
+                            line(line_),
+                            func(func_),
+                            info(info_)
+            {
+
+            }
+
+
+            const char* get_file() const { return file; }
+            int get_line() const { return line; }
+            const char* get_func() const { return func; }
+            const char* get_info() const { return info; }
+
+
+
+        };
+
         // Enumerators for the values that can be initialized into a constructor of Matrix.
         enum MatrixInitVal { zero, null, ones, twos, custom, random};
         // Enumerators for the types of Matrix that can be constructed.
         enum MatrixInitType { def, diagonal, upperTriangle, lowerTriangle};
 
 
-
+        /*
+         * Function     Matrix()
+         * @params:     -nothing
+         *
+         * Purpose:         Default constructor if no row size and col size is provided and/or an
+         *              an array to base the entries off. First value is initialized as zero.
+         *
+         * Author:      Steven Roddan on 8/4/2020.
+         */
         Matrix();
 
         Matrix(const Matrix&);
@@ -145,7 +204,6 @@ public:
          */
         Matrix(type *, unsigned);
 
-
         /*
          * Function:    Matrix(type *array, unsigned rows, unsigned cols, MatrixInitVal miv = MatrixInitVal::custom,
          *                      type customVal = NULL, MatrixInitType mit = MatrixInitType::def)
@@ -176,17 +234,17 @@ public:
          *              printing plus the max to give each number the same amount of spacing for even cols/rows.
          *
          * Usage:       int d[] = { 1,2,3,4,
-                                    7,8,9,5,
-                                    4,5,67,8,
-                                    4,4,4,4};
-
-                        Propulsion::Matrix<int> M(4,4,Propulsion::Matrix<int>::custom, 5,Propulsion::Matrix<int>::def);
-                        M.print();
-                        ***prints on command:
-                        |   1   2   3   4 |
-                        |   7   8   9   5 |
-                        |   4   5  67   8 |
-                        |   4   4   4   4 |***
+         *                          7,8,9,5,
+         *                          4,5,67,8,
+         *                          4,4,4,4};
+         *
+         *              Propulsion::Matrix<int> M(4,4,Propulsion::Matrix<int>::custom, 5,Propulsion::Matrix<int>::def);
+         *              M.print();
+         *              ***prints on command:
+         *              |   1   2   3   4 |
+         *              |   7   8   9   5 |
+         *              |   4   5  67   8 |
+         *              |   4   4   4   4 |***
          *
          * &returns:    &void
          * Author:      Steven Roddan on 8/4/2020.
@@ -220,12 +278,13 @@ public:
 
 
         // Matrix Math Related Functions
-        void add( const Matrix<type> &b);
+        void add( const Matrix<type> &b, bool printTime = false);
         Matrix<type> addRowVector(Matrix<type> &b);
         Matrix<type> addColVector(Matrix<type> &b);
         void subtract( const Matrix<type> &b);
-        void cudaMultiplyMatrices(Matrix<type> &B);
-        void multiply( const Matrix<type> &b);
+        void cudaMultiplyMatrices(const Matrix<type> &b);
+        void dot(const Matrix<type> &b);
+        void schurProduct(const Matrix<type> &b, bool printTime = false);
         void multiply( type scalar);
         void strassenMultiplication(const Matrix<type> &X);
         void T();
@@ -301,10 +360,6 @@ public:
 
         unsigned rows, cols, totalSize;
 
-        struct MatrixFlags {
-            bool multiplicationError = false;
-        };
-
 
         void generateMatrix(MatrixInitVal, MatrixInitType, type customVal, type * = nullptr);
         std::unique_ptr<type[]> generateZeroMatrixArray(unsigned );
@@ -364,8 +419,12 @@ public:
 
         void simulate();
 
-        std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelSingleThreaded(unsigned wPixels, unsigned hPixels, double leftBound, double rightBound, double topBound, double bottomBound, unsigned maxIterations, std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
-        std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelCUDA(unsigned wPixels, unsigned hPixels, double leftBound, double rightBound, double topBound, double bottomBound, unsigned maxIterations, std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
+        std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelSingleThreaded(unsigned wPixels, unsigned hPixels, double leftBound,
+                                                                                      double rightBound, double topBound, double bottomBound,
+                                                                                      unsigned maxIterations,std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
+        std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelCUDA(unsigned wPixels, unsigned hPixels, double leftBound, double rightBound,
+                                                                            double topBound, double bottomBound, unsigned maxIterations,
+                                                                            std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
     };
 
 
@@ -667,8 +726,12 @@ public:
     // 1D Multiplication Functions
     template <typename type> static void hostMultiply1DArrays(type *, type *, type *, unsigned, bool = false);
     template <typename type> static void hostMultiply1DArrayByScalar(type *, type, unsigned, bool = false);
-    template <typename type> static void cudaMultiply1DArrays(type *, type *, type *, unsigned, unsigned, unsigned, bool = false );
+    template <typename type> static void cudaDotProduct(type *, type *, type *, unsigned, unsigned, unsigned, bool = false);
     template <typename type> static void cudaMultiply1DArrayByScalar(type *, type, unsigned, bool = false);
+
+    // Schurs/Hadamard Product
+    template<typename type> static void hostSchurProduct(type *, type *, type *, unsigned, bool = false);
+    template<typename type> static void cudaSchurProduct(type *, type *, type *, unsigned, bool = false);
 
     // 1D Division Functions
     template <typename type> static void hostDivide1DArrays(type *, type *, type *, unsigned, bool = false);
@@ -703,6 +766,8 @@ public:
 
 
 
+    template <typename type>
+    static void cudaCopyArray(type *, type *, unsigned totalSize, bool printTime = false);
 
 
 

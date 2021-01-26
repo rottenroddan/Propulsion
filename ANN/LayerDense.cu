@@ -18,8 +18,8 @@ Propulsion::ArtificialNeuralNetwork::LayerDense::LayerDense(unsigned nInputs, un
     // Generate random weight valaues now.
     Propulsion::Matrix<double>::randomRealDistribution( weights, -1, 1);
 
-    // multiply by 0.10 to minimize the random values.
-    //weights->multiply(0.10);
+    // dot by 0.10 to minimize the random values.
+    //weights->dot(0.10);
 
 }
 

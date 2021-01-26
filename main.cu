@@ -316,7 +316,7 @@ void matrixFunctions()
     dotBMat.print();
     std::cout << "Yields:" << std::endl;
 
-    dotAMat.multiply(dotBMat);
+    dotAMat.dot(dotBMat);
     dotAMat.print();
 
     std::cout << "Matrix Addition with Operator" << std::endl;
@@ -617,7 +617,7 @@ void compareMultiplicationOperations()
 
     /*
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-    Aa.multiply(B);
+    Aa.dot(B);
     std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
     float milliseconds = (float)std::chrono::duration_cast<std::chrono::microseconds>(end-start).count() / 1000;
 
@@ -638,9 +638,12 @@ void compareMultiplicationOperations()
     /*
      * CUDA O(n^3)
      */
-    Propulsion::cudaMultiply1DArrays(A.getArray(), B.getArray(), Ccuda.getArray(), A.getRowSize(), A.getColSize(), B.getColSize(), true);
-    Propulsion::cudaMultiply1DArrays(A.getArray(), B.getArray(), Ccuda.getArray(), A.getRowSize(), A.getColSize(), B.getColSize(), true);
-    Propulsion::cudaMultiply1DArrays(A.getArray(), B.getArray(), Ccuda.getArray(), A.getRowSize(), A.getColSize(), B.getColSize(), true);
+    Propulsion::cudaDotProduct(A.getArray(), B.getArray(), Ccuda.getArray(), A.getRowSize(), A.getColSize(),
+                               B.getColSize(), true);
+    Propulsion::cudaDotProduct(A.getArray(), B.getArray(), Ccuda.getArray(), A.getRowSize(), A.getColSize(),
+                               B.getColSize(), true);
+    Propulsion::cudaDotProduct(A.getArray(), B.getArray(), Ccuda.getArray(), A.getRowSize(), A.getColSize(),
+                               B.getColSize(), true);
 
     if(Cstrassen == Ccuda)
     {
@@ -648,8 +651,200 @@ void compareMultiplicationOperations()
     }
 }
 
+void secondMatrixTests()
+{
+    Propulsion::Matrix<double> A(200, 200);
+    Propulsion::Matrix<double>::randomRealDistribution(A, -2.0, 2.0);
 
-void furryTestClassifier()
+    auto B = A;
+    if(A == B)
+    {
+        std::cout << "Passed(Equality Operator & Copy Constructor)" << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed(Equality Operator or Copy Constructor)" << std::endl;
+    }
+
+    auto C = A * B;
+    if(C == B)
+    {
+        std::cout << "Failed(rValue and Copy Constructor)-> C should not equal B" << std::endl;
+    }
+    else if(C == A)
+    {
+        std::cout << "Failed(rValue and Copy Constructor)-> C should not equal A" << std::endl;
+    }
+    else
+    {
+        std::cout << "Passed(rValue and Copy Constructor)" << std::endl;
+    }
+
+    // Verify Addition works
+    try{
+        Propulsion::Matrix<double> addA(677, 888);
+        Propulsion::Matrix<double> addB(687, 888);
+
+        Propulsion::Matrix<double>::randomRealDistribution(addA, 1.0, 100.0);
+        Propulsion::Matrix<double>::randomRealDistribution(addB, 1.0, 100.0);
+
+        addA.add(addB);
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Passed(Add Exception throw)->Exception: " << e.what() << std::endl;
+    }
+    try{
+        Propulsion::Matrix<double> addA(687, 888);
+        Propulsion::Matrix<double> addB(687, 888);
+
+        Propulsion::Matrix<double>::randomRealDistribution(addA, 1.0, 100.0);
+        Propulsion::Matrix<double>::randomRealDistribution(addB, 1.0, 100.0);
+
+        addA.add(addB);
+
+        std::cout << "Passed(Add Didn't Throw Exception on good data!)" << std::endl;
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Failed(Add Should not Throw Exception)->Exception: " << e.what() << std::endl;
+    }
+
+    /*
+     * Verify Add Row Vector
+     */
+    try{
+        Propulsion::Matrix<double> arvA(3, 3);
+        Propulsion::Matrix<double> arvB(1,3);
+
+        Propulsion::Matrix<double>::randomRealDistribution(arvA, -1.0, 1.0);
+        Propulsion::Matrix<double>::randomRealDistribution(arvB, -1.0, 1.0);
+
+        auto arvC = arvA.addRowVector(arvB);
+
+        std::cout << "Passed(addRowVector)" << std::endl;
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Failed(addRowVector should not throw an exception)->Exception: " << e.what() << std::endl;
+    }
+    try{
+        Propulsion::Matrix<double> arvA(3, 2);
+        Propulsion::Matrix<double> arvB(1,3);
+
+        Propulsion::Matrix<double>::randomRealDistribution(arvA, -1.0, 1.0);
+        Propulsion::Matrix<double>::randomRealDistribution(arvB, -1.0, 1.0);
+
+        auto arvC = arvA.addRowVector(arvB);
+
+        std::cout << "Failed(addRowVector should throw an exception)" << std::endl;
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Passed(addRowVector should throw an exception)->Exception: " << e.what() << std::endl;
+    }
+
+    /*
+     * Verify addColVectors
+     */
+    try{
+        Propulsion::Matrix<double> acvA(3, 3);
+        Propulsion::Matrix<double> acvB(3,1);
+
+        Propulsion::Matrix<double>::randomRealDistribution(acvA, -1.0, 1.0);
+        Propulsion::Matrix<double>::randomRealDistribution(acvB, -1.0, 1.0);
+
+        auto acvC = acvA.addColVector(acvB);
+
+        std::cout << "Passed(addColVector)" << std::endl;
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Failed(addColVector should not throw an exception)->Exception: " << e.what() << std::endl;
+    }
+    try{
+        Propulsion::Matrix<double> acvA(2, 3);
+        Propulsion::Matrix<double> acvB(3,1);
+
+        Propulsion::Matrix<double>::randomRealDistribution(acvA, -1.0, 1.0);
+        Propulsion::Matrix<double>::randomRealDistribution(acvB, -1.0, 1.0);
+
+        auto acvC = acvA.addColVector(acvB);
+
+        std::cout << "Failed(addColVector should throw an exception)" << std::endl;
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Passed(addColVector threw an exception)->Exception: " << e.what() << std::endl;
+    }
+
+    /*
+     * Verify Subtract
+     */
+    try{
+        Propulsion::Matrix<double> subA(4, 4);
+        Propulsion::Matrix<double> subB(4,4);
+
+        Propulsion::Matrix<double>::randomRealDistribution(subA, -1.0, 1.0);
+        Propulsion::Matrix<double>::randomRealDistribution(subB, -1.0, 1.0);
+
+        subA.subtract(subB);
+
+        std::cout << "Passed(subtract)" << std::endl;
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Failed(subtract should not throw an exception)->Exception: " << e.what() << std::endl;
+    }
+
+    try{
+        Propulsion::Matrix<double> subA(4, 123);
+        Propulsion::Matrix<double> subB(123,4);
+
+        Propulsion::Matrix<double>::randomRealDistribution(subA, -1.0, 1.0);
+        Propulsion::Matrix<double>::randomRealDistribution(subB, -1.0, 1.0);
+
+        subA.subtract(subB);
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Passed(subtract should throw an exception)->Exception: " << e.what() << std::endl;
+    }
+
+    /*
+     * Verify cudaMultiplyMatrices
+     */
+    try{
+        Propulsion::Matrix<double> subA(4, 123);
+        Propulsion::Matrix<double> subB(123,4);
+
+        Propulsion::Matrix<double>::randomRealDistribution(subA, -1.0, 1.0);
+        Propulsion::Matrix<double>::randomRealDistribution(subB, -1.0, 1.0);
+
+        subA.subtract(subB);
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Passed(subtract should throw an exception)->Exception: " << e.what() << std::endl;
+    }
+
+
+    /*
+     * Verify Schurs Product Works
+     */
+    try {
+        Propulsion::Matrix<double> schursA(1000, 1000);
+        Propulsion::Matrix<double> schursB(1000, 1001);
+
+        schursA.schurProduct(schursB);
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Passed(SchurProduct Exception throw)->Exception: " << e.what() << std::endl;
+    }
+}
+
+void aiClassifier()
 {
     auto A = Propulsion::ArtificialNeuralNetwork();
     A.test();
@@ -678,12 +873,25 @@ int main()
 
     //test_one_dimensional_array_operations();
 
-    furryTestClassifier();
+    //furryTestClassifier();
 
 
+    /*
+    Propulsion::Mandelbrot M(640,480);
+    M.simulate();
 
-    //Propulsion::Mandelbrot M(640,480);
-    //M.simulate();
+    Propulsion::Matrix<double> R(1000,1000);
+    Propulsion::Matrix<double>::randomRealDistribution(R, -1.0, 1.0);
+
+    auto A = Propulsion::Matrix<double>::copy(R);
+
+    if(A == R)
+    {
+        std::cout << "Wow" << std::endl;
+    }*/
+
+
+    secondMatrixTests();
 
 
 

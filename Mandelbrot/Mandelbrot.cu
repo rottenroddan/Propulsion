@@ -63,9 +63,14 @@ void Propulsion::Mandelbrot::generateColorScheme(unsigned totalColors)
 
 
     // Second Color gradient.
-    const int secondControlFirstRed     = 0x26;
-    const int secondControlFirstGreen   = 0x02;
-    const int secondControlFirstBlue    = 0x4f;
+    //const int secondControlFirstRed     = 0x26;
+    //const int secondControlFirstGreen   = 0x02;
+    //const int secondControlFirstBlue    = 0x4f;
+
+    const int secondControlFirstRed     = 0xc2;
+    const int secondControlFirstGreen   = 0x00;
+    const int secondControlFirstBlue    = 0x00;
+
     const int secondControlSecondRed    = 0x56;
     const int secondControlSecondGreen  = 0x00;
     const int secondControlSecondBlue   = 0xbf;
@@ -75,35 +80,55 @@ void Propulsion::Mandelbrot::generateColorScheme(unsigned totalColors)
 
 
     // Third Color gradient.
-    const int thirdControlFirstRed      = 0x03;
+    //const int thirdControlFirstRed      = 0x03;
+    //const int thirdControlFirstGreen    = 0x00;
+    //const int thirdControlFirstBlue     = 0xcf;
+
+    const int thirdControlFirstRed      = 0x56;
     const int thirdControlFirstGreen    = 0x00;
-    const int thirdControlFirstBlue     = 0xcf;
+    const int thirdControlFirstBlue     = 0xbf;
+
     const int thirdControlSecondRed     = 0x00;
     const int thirdControlSecondGreen   = 0xac;
     const int thirdControlSecondBlue    = 0xcf;
 
 
     // Fourth color gradient
+    //const int fourthControlFirstRed     = 0x00;
+    //const int fourthControlFirstGreen   = 0xe8;
+    //const int fourthControlFirstBlue    = 0xba;
+
     const int fourthControlFirstRed     = 0x00;
-    const int fourthControlFirstGreen   = 0xe8;
-    const int fourthControlFirstBlue    = 0xba;
+    const int fourthControlFirstGreen   = 0xac;
+    const int fourthControlFirstBlue    = 0xcf;
+
     const int fourthControlSecondRed    = 0xe8;
     const int fourthControlSecondGreen  = 0xdc;
     const int fourthControlSecondBlue   = 0x00;
 
 
     // Fifth color gradient
-    const int fifthControlFirstRed      = 0xfa;
-    const int fifthControlFirstGreen    = 0x7d;
+    //const int fifthControlFirstRed      = 0xfa;
+    //const int fifthControlFirstGreen    = 0x7d;
+    //const int fifthControlFirstBlue     = 0x00;
+
+    const int fifthControlFirstRed      = 0xe8;
+    const int fifthControlFirstGreen    = 0xdc;
     const int fifthControlFirstBlue     = 0x00;
+
     const int fifthControlSecondRed     = 0xfa;
     const int fifthControlSecondGreen   = 0x0c;
     const int fifthControlSecondBlue    = 0x00;
 
 
+    //const int sixthControlFirstRed      = 0xfa;
+    //const int sixthControlFirstGreen    = 0x00;
+    //const int sixthControlFirstBlue     = 0x00;
+
     const int sixthControlFirstRed      = 0xfa;
-    const int sixthControlFirstGreen    = 0x00;
+    const int sixthControlFirstGreen    = 0x0c;
     const int sixthControlFirstBlue     = 0x00;
+
     const int sixthControlSecondRed     = 0x67;
     const int sixthControlSecondGreen   = 0x00;
     const int sixthControlSecondBlue    = 0x8a;
@@ -413,14 +438,14 @@ void Propulsion::Mandelbrot::generateColorScheme(unsigned totalColors)
 
 void Propulsion::Mandelbrot::paintWindow()
 {
-    mutexPainting.lock();
+    //mutexPainting.lock();
 
     //std::cout << "Starting Paint" << std::endl;
     // Check if window handle exists. If not return and error message.
     if(this->hwnd == nullptr || windowDestroyed)
     {
         std::cout << "Window closed!" << std::endl;
-        mutexPainting.unlock();
+        //mutexPainting.unlock();
         return;
     }
 
@@ -449,6 +474,10 @@ void Propulsion::Mandelbrot::paintWindow()
 
             // Start clock for mandel calculation
             std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
+
+            // Generate new color scheme as iterations have gone up!
+            generateColorScheme(this->iterations);
 
             // Calculate Mandel
             /*
@@ -534,7 +563,7 @@ void Propulsion::Mandelbrot::paintWindow()
         DeleteDC(hdc);
     }
 
-    mutexPainting.unlock();
+    //mutexPainting.unlock();
 
 }
 
@@ -577,11 +606,11 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         break;
     case WM_DESTROY:
-        mutexPainting.lock();
+        //mutexPainting.lock();
         std::cout << "Closing" << std::endl;
         PostQuitMessage(0);
         windowDestroyed = true;
-        mutexPainting.unlock();
+        //mutexPainting.unlock();
         return 0;
     case WM_ACTIVATEAPP:
         if(activeApp != true)
@@ -660,6 +689,7 @@ void Propulsion::Mandelbrot::simulate()
     MSG msg;
 
     POINT p;
+    bool lookingForInput = true;
 
     while (GetMessage( &msg, NULL, 0, 0 ) > 0)
     {
@@ -667,26 +697,48 @@ void Propulsion::Mandelbrot::simulate()
         DispatchMessage(&msg);
 
         // If Q button is pressed, do something special!
-        if (GetKeyState('Q') & 0x8000 && GetActiveWindow() == hwnd) {
-            if(this->currentEpochSelection < this->epoch->getColSize())
+        if (GetKeyState('Q') & 0x8000 && GetActiveWindow() == hwnd && lookingForInput) {
+            if(this->currentEpochSelection < this->epoch->getColSize() - 1)
             {
                 currentEpochSelection++;
                 std::cout << "Setting Iterations to: " << this->epoch->at(this->currentEpochSelection)<< std::endl;
                 this->redraw = true;
                 this->iterations = this->epoch->at(this->currentEpochSelection);
-                Sleep(50);
+
+                std::cout << "More stats: " << std::endl
+                        <<   "Iterations: " << this->iterations << std::endl
+                        <<   "Selection:  " << this->currentEpochSelection - 1 << std::endl;
+
+                lookingForInput = false;
             }
         }
-        else if(GetKeyState('E') & 0x8000 && GetActiveWindow() == hwnd) {
+        else if(GetKeyState('E') & 0x8000 && GetActiveWindow() == hwnd && lookingForInput) {
             if(this->currentEpochSelection > 0)
             {
                 currentEpochSelection--;
                 std::cout << "Setting Iterations to: " << this->epoch->at(this->currentEpochSelection)<< std::endl;
                 this->redraw = true;
                 this->iterations = this->epoch->at(this->currentEpochSelection);
-                Sleep(50);
+
+                lookingForInput = false;
             }
 
+        }
+        else if(GetKeyState('T') & 0x8000 && GetActiveWindow() == hwnd && lookingForInput) {
+            unsigned desiredIterations;
+            std::cout << "Enter Desired Iterations here: ";
+            std::cin >> desiredIterations;
+            if(desiredIterations != 0) {
+                this->redraw = true;
+                this->iterations = desiredIterations;
+
+                std::cout << "More stats: " << std::endl
+                          << "Iterations: " << this->iterations << std::endl;
+            }
+            else
+            {
+                std::cout << "User Provided zero as input, just ignore." << std::endl;
+            }
         }
 
         // Check if we can draw at 100FPS.
@@ -697,6 +749,7 @@ void Propulsion::Mandelbrot::simulate()
                 }
             else {
                 paintWindow();
+                lookingForInput = true;
             }
             // Reset timer from last frame!
             start = std::chrono::high_resolution_clock::now();

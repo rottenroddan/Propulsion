@@ -44,3 +44,5 @@ void Propulsion::hostAdd2DMatrices(type **a, type **b, type **c, unsigned int rS
               " ms." << std::setw(TIME_WIDTH) << (cSize*sizeof(type))/milliseconds/1e6 << " GB/s" << std::endl;
     return;
 }
+
+
