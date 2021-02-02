@@ -588,27 +588,24 @@ void matrixFunctions()
     ANN.printOutputLayer();*/
 }
 
-void compareMultiplicationOperations()
+bool compareMultiplicationOperations()
 {
-    unsigned rSz = 1024*16;
-    unsigned cSz = rSz;
+    unsigned rSz = 512;
+    unsigned cSz = 512;
 
     // create matrices.
     Propulsion::Matrix<int> A(rSz, cSz);
     Propulsion::Matrix<int> Aa(rSz, cSz);
-    Propulsion::Matrix<int> B(rSz, cSz);
+    Propulsion::Matrix<int> B(cSz, rSz);
     Propulsion::Matrix<int> Cstrassen(A.getRowSize(), B.getColSize());
     Propulsion::Matrix<int> Ccuda(A.getRowSize(), B.getColSize());
 
 
     // Populate Matrices.
     A.populateWithUniformDistribution(0.0,100.0);
+
     // Copy.
     Aa = A;
-    if(Aa == A)
-    {
-        std::cout << "Good\n";
-    }
     B.populateWithUniformDistribution(0.0,100.0);
 
     /*
@@ -633,22 +630,14 @@ void compareMultiplicationOperations()
     std::chrono::high_resolution_clock::time_point end2 = std::chrono::high_resolution_clock::now();
     float milliseconds = (float)std::chrono::duration_cast<std::chrono::microseconds>(end2-start2).count() / 1000;
 
-    std::cout << "O(n^2.8...) Took: " << milliseconds <<  " milliseconds." << std::endl;
+    std::cout << " Strassen Took: " << milliseconds <<  " milliseconds." << std::endl;
 
     /*
      * CUDA O(n^3)
      */
-    Propulsion::cudaDotProduct(A.getArray(), B.getArray(), Ccuda.getArray(), A.getRowSize(), A.getColSize(),
-                               B.getColSize(), true);
-    Propulsion::cudaDotProduct(A.getArray(), B.getArray(), Ccuda.getArray(), A.getRowSize(), A.getColSize(),
-                               B.getColSize(), true);
-    Propulsion::cudaDotProduct(A.getArray(), B.getArray(), Ccuda.getArray(), A.getRowSize(), A.getColSize(),
-                               B.getColSize(), true);
+    Aa.cudaDotProduct(B, true);
 
-    if(Cstrassen == Ccuda)
-    {
-        std::cout << "Yes they are equal!\n";
-    }
+    return Aa == Cstrassen;
 }
 
 void secondMatrixTests()
@@ -805,6 +794,8 @@ void secondMatrixTests()
         Propulsion::Matrix<double>::randomRealDistribution(subB, -1.0, 1.0);
 
         subA.subtract(subB);
+
+        std::cout << "Failed(subtract should throw an exception)" << std::endl;
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
@@ -815,17 +806,88 @@ void secondMatrixTests()
      * Verify cudaMultiplyMatrices
      */
     try{
-        Propulsion::Matrix<double> subA(4, 123);
-        Propulsion::Matrix<double> subB(123,4);
+        Propulsion::Matrix<double> multA(4, 122);
+        Propulsion::Matrix<double> multB(123,4);
 
-        Propulsion::Matrix<double>::randomRealDistribution(subA, -1.0, 1.0);
-        Propulsion::Matrix<double>::randomRealDistribution(subB, -1.0, 1.0);
+        Propulsion::Matrix<double>::randomRealDistribution(multA, -1.0, 1.0);
+        Propulsion::Matrix<double>::randomRealDistribution(multB, -1.0, 1.0);
 
-        subA.subtract(subB);
+        multA.cudaDotProduct(multB);
+
+        std::cout << "Failed(cudaMultiplyMatrices should throw an exception)" << std::endl;
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Passed(subtract should throw an exception)->Exception: " << e.what() << std::endl;
+        std::cout << "Passed(cudaMultiplyMatrices should throw an exception)->Exception: " << e.what() <<std::endl;
+    }
+    try{
+        Propulsion::Matrix<double> multA(4, 123);
+        Propulsion::Matrix<double> multB(123,4);
+
+        Propulsion::Matrix<double>::randomRealDistribution(multA, -1.0, 1.0);
+        Propulsion::Matrix<double>::randomRealDistribution(multB, -1.0, 1.0);
+
+        multA.cudaDotProduct(multB);
+
+        std::cout << "Passed(cudaMultiplyMatrices)" << std::endl;
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Failed(cudaMultiplyMatrices should not throw an exception)->Exception: " << e.what() << std::endl;
+    }
+
+    /*
+     * Verify DotProduct
+     */
+    try{
+        Propulsion::Matrix<double> multA(4, 122);
+        Propulsion::Matrix<double> multB(123,4);
+
+        Propulsion::Matrix<double>::randomRealDistribution(multA, -1.0, 1.0);
+        Propulsion::Matrix<double>::randomRealDistribution(multB, -1.0, 1.0);
+
+        multA.cudaDotProduct(multB);
+
+        std::cout << "Failed(dot should throw an exception)" << std::endl;
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Passed(dot should throw an exception)->Exception: " << e.what() <<std::endl;
+    }
+    try{
+        Propulsion::Matrix<int> multA(206, 123);
+        Propulsion::Matrix<int> multB(123,206);
+
+        Propulsion::Matrix<int>::randomRealDistribution(multA, 0.0, 5.0);
+        Propulsion::Matrix<int>::randomRealDistribution(multB, 0.0, 25.0);
+
+        auto cudaA = multA;
+        auto cudaB = multB;
+
+        cudaA.cudaDotProduct(cudaB, true);
+        multA.dot(multB, true);
+
+        if(multA == cudaA)
+        {
+            std::cout << "Passed(dot vs cudaDot equality)" << std::endl;
+        }
+
+        std::cout << "Passed(dot)" << std::endl;
+    }
+    catch (Propulsion::Matrix<double>::MatrixException &e)
+    {
+        std::cout << "Failed(dot should not throw an exception)->Exception: " << e.what() << std::endl;
+    }
+    std::cout << "Testing Matrix Dot Product Speed..." << std::endl
+            << "Results: " << std::endl;
+
+    if(!compareMultiplicationOperations())
+    {
+        std::cout << "Dot Product Failed Equality Test" << std::endl;
+    }
+    else
+    {
+
     }
 
 
@@ -871,7 +933,7 @@ int main()
               "22222222222222222222     DDDDDDDDDDDDD\n\n"; //        arrays....
     //test_two_dimensional_array_operations();
 
-    //test_one_dimensional_array_operations();
+    test_one_dimensional_array_operations();
 
     //furryTestClassifier();
 

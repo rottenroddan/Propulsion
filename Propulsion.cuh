@@ -282,11 +282,11 @@ namespace Propulsion {
         Matrix<type> addRowVector(Matrix<type> &b);
         Matrix<type> addColVector(Matrix<type> &b);
         void subtract( const Matrix<type> &b);
-        void cudaMultiplyMatrices(const Matrix<type> &b);
-        void dot(const Matrix<type> &b);
+        void cudaDotProduct(const Matrix<type> &b, bool printTime = false);
+        void dot(const Matrix<type> &b, bool printTime = false);
         void schurProduct(const Matrix<type> &b, bool printTime = false);
         void multiply( type scalar);
-        void strassenMultiplication(const Matrix<type> &X);
+        void strassenMultiplication(const Matrix<type> &b);
         void T();
 
         type getMax();
@@ -726,7 +726,8 @@ namespace Propulsion {
     // 1D Multiplication Functions
     template <typename type> static void hostMultiply1DArrays(type *, type *, type *, unsigned, bool = false);
     template <typename type> static void hostMultiply1DArrayByScalar(type *, type, unsigned, bool = false);
-    template <typename type> static void cudaDotProduct(type *, type *, type *, unsigned, unsigned, unsigned, bool = false);
+    template<typename type> static void hostDotProduct(type *, type*, type *, unsigned aRows, unsigned aColsBRows, unsigned bCols, bool = false);
+    template <typename type> static void cudaDotProduct(type *a, type *b, type *c, unsigned, unsigned, unsigned, bool = false);
     template <typename type> static void cudaMultiply1DArrayByScalar(type *, type, unsigned, bool = false);
 
     // Schurs/Hadamard Product
