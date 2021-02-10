@@ -1194,7 +1194,6 @@ void Propulsion::hostSubtract1DArraysDouble64AVX256(double *a, double *b, double
     else
     {
         boundedRange = cols - (cols % (unsigned)(AVX256BYTES / (sizeof(double))));
-        std::cout << "Bounded Range boi! " << cols - (cols % (unsigned)(AVX256BYTES / (sizeof(double)))) << std::endl;
         for(unsigned i = boundedRange; i < cols; i++)
         {
             c[i] = a[i] + b[i];
@@ -1239,7 +1238,6 @@ void Propulsion::hostSubtract1DArraysFloat32AVX256(float *a, float *b, float *c,
     else
     {
         boundedRange = cols - (cols % (unsigned)(AVX256BYTES / (sizeof(float))));
-        std::cout << "Bounded Range boi! " << cols - (cols % (unsigned)(AVX256BYTES / (sizeof(float)))) << std::endl;
         for(unsigned i = boundedRange; i < cols; i++)
         {
             c[i] = a[i] + b[i];

@@ -1043,19 +1043,19 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::operator*(type rhs)
 
 
 template<typename type>
-Propulsion::Matrix<type>& Propulsion::Matrix<type>::operator=(const Matrix<type> &r)
+Propulsion::Matrix<type>& Propulsion::Matrix<type>::operator=(const Matrix<type> &rhs)
 {
     // If same return this
-    if(this == &r) {return *this;}
+    if(this == &rhs) {return *this;}
     else {
         // else, make a deep copy.
-        this->totalSize = r.totalSize;
-        this->rows = r.rows;
-        this->cols = r.cols;
+        this->totalSize = rhs.totalSize;
+        this->rows = rhs.rows;
+        this->cols = rhs.cols;
         this->M = std::make_unique<type[]>(this->totalSize);
 
-        for (unsigned i = 0; i < r.totalSize; i++) {
-            this->M[i] = r.M[i];
+        for (unsigned i = 0; i < rhs.totalSize; i++) {
+            this->M[i] = rhs.M[i];
         }
     }
     return *this;

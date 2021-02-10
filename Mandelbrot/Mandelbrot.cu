@@ -15,7 +15,7 @@
 bool activeApp = false;
 
 unsigned ITER_STEPS[] = {125,2000,5000, 100000, 200000, 500000, 1000000};
-unsigned stepSize = 7;
+unsigned STEP_SIZE = 7;
 
 
 std::mutex mutexPainting;
@@ -39,7 +39,7 @@ Propulsion::Mandelbrot::Mandelbrot(unsigned int width, unsigned int height, doub
     this->iterations = MAX_ITER;
 
     generateColorScheme(this->iterations);
-    this->epoch = std::make_unique<Matrix<unsigned>>(ITER_STEPS , 1, stepSize);
+    this->epoch = std::make_unique<Matrix<unsigned>>(ITER_STEPS , 1, STEP_SIZE);
 }
 
 
@@ -432,7 +432,7 @@ void Propulsion::Mandelbrot::generateColorScheme(unsigned totalColors)
     }
 
     // this is stable color for the max iterations, therefore we make black.
-    this->colorPicker->at(totalColors - 1);
+    this->colorPicker->at(totalColors - 1) = 0x000000;
 
 }
 
@@ -483,13 +483,22 @@ void Propulsion::Mandelbrot::paintWindow()
             /*
             this->Mandel = calculateMandelSingleThreaded(this->clientWidthPixels, this->clientHeightPixels,
                                                          this->leftBound, this->rightBound, this->topBound,
-                                                         this->bottomBound, MAX_ITER,
-                                                         this->colorPicker);*/
+                                                         this->bottomBound, this->iterations,
+                                                         this->colorPicker);
+            /*
+            this->Mandel = calculateMandelAVX256(this->clientWidthPixels, this->clientHeightPixels,
+                                                 this->leftBound, this->rightBound, this->topBound,
+                                                 this->bottomBound, this->iterations,this->colorPicker);
 
+            /*
             this->Mandel = calculateMandelCUDA(this->clientWidthPixels, this->clientHeightPixels,
                                                this->leftBound, this->rightBound, this->topBound,
                                                this->bottomBound, this->iterations,this->colorPicker);
+            */
 
+            this->Mandel = calculateMandelMultiThreaded(16,this->clientWidthPixels, this->clientHeightPixels,
+                                               this->leftBound, this->rightBound, this->topBound,
+                                               this->bottomBound, this->iterations,this->colorPicker);
 
             // Calculate total copy constructor time + process time.
             std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
@@ -505,7 +514,7 @@ void Propulsion::Mandelbrot::paintWindow()
 
         if(Mandel->getColSize() != clientRect.right || Mandel->getRowSize() != clientRect.bottom)
         {
-            std::cout << "You should never see this the fuck!" << std::endl;
+            std::cout << "You should never see this!" << std::endl;
         }
 
         InvalidateRect(this->hwnd, &clientRect, false);
@@ -799,11 +808,11 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
 
     for(unsigned i = 0; i < Mandelset->getRowSize(); i++)
     {
+        double complexYValue = topBound - complexIncrementer*i;
         for(unsigned j = 0; j < Mandelset->getColSize(); j++)
         {
             // The current values we are calculating. Scaled from the current pixel.
             double realXValue = leftBound + realIncrementer*j;
-            double complexYValue = topBound - complexIncrementer*i;
 
             double zx = 0;
             double zy = 0;
@@ -847,6 +856,237 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
     return Mandelset;
 }
 
+
+std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandelAVX256(unsigned int wPixels, unsigned int hPixels, double leftBound, double rightBound, double topBound, double bottomBound, unsigned maxIterations, std::shared_ptr< Propulsion::Matrix< int>> colorPicker)
+{
+    // Start clock for mandel calculation
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
+    // Create a matrix with the dimensions of the window
+    std::unique_ptr<Propulsion::Matrix<int>> Mandelset( new Matrix<int>(hPixels, wPixels));
+
+
+    // Real line is the horizontal line
+    double realIncrementer = ( rightBound - leftBound ) / wPixels;
+    double complexIncrementer = (topBound - bottomBound) / hPixels;
+
+    // Needed for second for loop for any potential pixels outside of factor 4 for double intrin.
+    unsigned i, j;
+    unsigned boundedRange = Mandelset->getColSize() - (Mandelset->getColSize() % (unsigned)((AVX256BYTES) / (sizeof(double))));
+
+    __m256d _zr, _zi, _cr, _ci, _a, _b, _zr2, _zi2, _two,
+            _four, _mask1, _leftBound, _topBound,
+            _realIncrementer, _complexIncrementer,
+            _i, _j;
+    __m256i _n, _maxIterations, _mask2, _c, _one;
+
+    // Below are constants for the SIMD registers to be used.
+    _one = _mm256_set1_epi64x(1);
+    _two = _mm256_set1_pd(2.0);
+    _four = _mm256_set1_pd(4.0);
+    _topBound = _mm256_set1_pd(topBound);
+    _leftBound = _mm256_set1_pd(leftBound);
+
+    _maxIterations = _mm256_set1_epi64x(maxIterations);
+    _realIncrementer = _mm256_set1_pd(realIncrementer);
+    _complexIncrementer = _mm256_set1_pd(complexIncrementer);
+
+    for(i = 0; i < Mandelset->getRowSize(); i++)
+    {
+        // _i = i
+        // | 0 | 0 | 0 | 0 |
+        //   ^   ^   ^   ^
+        //   +---+---+---+
+        //   |
+        //   i -> 1
+        // -----------------
+        // | 1 | 1 | 1 | 1 |
+        _i = _mm256_set1_pd((double)i);
+
+        // ci = leftBound + realIncrementer*j;
+        _ci = _mm256_sub_pd(_topBound, _mm256_mul_pd(_complexIncrementer, _i));
+
+        // Since this is the incrementer for the length of the screen, we
+        // reset back to 0,1,2,3 that way we increment by 4 each cycle at the end
+        // of each loop in the next for loop.
+        _j = _mm256_set_pd(0.0, 1.0, 2.0, 3.0);
+
+        for(j = 0; j < boundedRange; j += 4)
+        {
+            // cr = leftBound + realIncrementer*j;
+            _cr = _mm256_add_pd(_leftBound, _mm256_mul_pd(_realIncrementer, _j));
+
+            // Reset to zero.
+            _zr = _mm256_setzero_pd();
+            _zi = _mm256_setzero_pd();
+            _n = _mm256_setzero_si256();
+
+            // Since formal loops can't be used.
+            repeat:
+            // The mandelbrot set:
+            // z = (z * z) + c
+            // broken up since complex:
+            // a = zr * zr - zi * zi + cr
+            // b = zr * zI * 2.0 + ci
+            // zr = a
+            // zi = b
+
+
+
+            // a = zr * zr - zi * zi + cr
+            _zr2 = _mm256_mul_pd(_zr, _zr); // zr * zr
+            _zi2 = _mm256_mul_pd(_zi, _zi); // zi * zi
+            _a = _mm256_sub_pd(_zr2, _zi2); // zr^2 - zi^2
+            _a = _mm256_add_pd(_a, _cr);    // zr^2 - zi^2 + cr
+
+            // b = zr * zI * 2.0 + ci
+            _b = _mm256_mul_pd(_zr, _zi);
+            _b = _mm256_fmadd_pd(_b, _two, _ci);
+
+
+            // zr = a
+            // zi = b
+            _zr = _a;
+            _zi = _b;
+
+
+            // Below is the if statement from Naive solution:
+            //  if (a < 4.0 && n < maxIterations)
+            // mask2 = | 0..0 | 0..0 | 1..1 | 1..1 | or something of the sort
+            _a = _mm256_add_pd(_zr2, _zi2);
+
+            // if _a < 4.0 for all registers
+            _mask1 = _mm256_cmp_pd(_a, _four, _CMP_LT_OQ);
+            _mask2 = _mm256_cmpgt_epi64(_maxIterations, _n);
+            _mask2 = _mm256_and_si256(_mask2, _mm256_castpd_si256(_mask1));
+
+            // Since:
+            // mask2 ~= | 1..1 | 0..0 | 1..1 | 1..1 |
+            // We want to use this data to add to the _n register, which would be bad unless
+            // _n    ~= | 0..1 | 0..0 | 0..1 | 0..1 |
+            _c = _mm256_and_si256(_mask2, _one);
+
+            // Now we add _c to _n as this will only increment the correct results
+            _n = _mm256_add_epi64(_n, _c);
+
+            if(_mm256_movemask_pd(_mm256_castsi256_pd(_mask2)) > 0)
+                goto repeat;
+
+            // Set colors
+            Mandelset->at(i,j + 0) = colorPicker->at(_n.m256i_i64[3] - 1);
+            Mandelset->at(i,j + 1) = colorPicker->at(_n.m256i_i64[2] - 1);
+            Mandelset->at(i,j + 2) = colorPicker->at(_n.m256i_i64[1] - 1);
+            Mandelset->at(i,j + 3) = colorPicker->at(_n.m256i_i64[0] - 1);
+
+
+            // Increment _j by 4 so that
+            // | 0 | 1 | 2 | 3 |
+            // | 4 | 4 | 4 | 4 | +
+            // -----------------
+            // | 4 | 5 | 6 | 7 |
+            _j = _mm256_add_pd(_j, _four);
+        }
+    }
+
+    std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+    float milliseconds = (float) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000;
+
+    std::cout << std::left << std::setw(TIME_FORMAT) << " HOST:  Mandel Calculate Time: " <<
+              std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
+              " ms." <<  std::endl;
+
+    return Mandelset;
+}
+
+std::unique_ptr<Propulsion::Matrix<double>> test(std::shared_ptr<Propulsion::Matrix<int>> s)
+{
+    auto M = std::make_unique<Propulsion::Matrix<double>>(10,10);
+    return M;
+}
+
+
+std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandelMultiThreaded(unsigned int threads, unsigned int wPixels, unsigned int hPixels, double leftBound, double rightBound, double topBound, double bottomBound, unsigned maxIterations, std::shared_ptr< Propulsion::Matrix< int>> colorPicker) {
+    // Start clock for mandel calculation
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
+    // Create a matrix with the dimensions of the window
+    std::unique_ptr<Propulsion::Matrix<int>> Mandelset( new Matrix<int>(hPixels, wPixels));
+
+    unsigned rowsPerThread, colsPerThread, bottomThreadRows;
+    rowsPerThread = std::floor(hPixels / threads);
+    colsPerThread = wPixels;
+
+    bottomThreadRows = hPixels - rowsPerThread * (threads - 1);
+
+    // Real line is the horizontal line
+    //double realIncrementer = ( rightBound - leftBound ) / wPixels;
+    double complexIncrementer = (topBound - bottomBound) / hPixels;
+
+
+    std::list< std::future< std::unique_ptr< Propulsion::Matrix< int>>>> mandelPromises;
+    std::pair< std::vector< double>, std::vector< double>> promiseTopAndBottomBounds;
+
+    promiseTopAndBottomBounds.first.resize(threads);
+    promiseTopAndBottomBounds.second.resize(threads);
+
+    for(unsigned i = 0; i < threads; i++)
+    {
+
+
+        if(i == (threads - 1))
+        {
+            promiseTopAndBottomBounds.first[i] = topBound - rowsPerThread * i * complexIncrementer;
+            promiseTopAndBottomBounds.second[i] = bottomBound;
+        }
+        else
+        {
+            promiseTopAndBottomBounds.first[i] = topBound - rowsPerThread * i * complexIncrementer;
+            promiseTopAndBottomBounds.second[i] = topBound - rowsPerThread * (i + 1) * complexIncrementer + complexIncrementer;
+        }
+    }
+
+
+
+    // We skip last thread as last thread starts with special condition.
+    for(unsigned i = 0; i < threads - 1; i++)
+    {
+        // Lambda wrapper for
+        mandelPromises.push_back(std::async( [=](){
+            return Propulsion::Mandelbrot::calculateMandelAVX256(colsPerThread, rowsPerThread, leftBound, rightBound, promiseTopAndBottomBounds.first[i], promiseTopAndBottomBounds.second[i], maxIterations, colorPicker);
+        }));
+    }
+    mandelPromises.push_back(std::async( [=]() {
+        return Propulsion::Mandelbrot::calculateMandelAVX256(colsPerThread, bottomThreadRows, leftBound, rightBound, promiseTopAndBottomBounds.first[threads - 1], promiseTopAndBottomBounds.second[threads - 1], maxIterations, colorPicker);
+    }));
+
+    std::list<std::future< std::unique_ptr< Propulsion::Matrix< int>>>>::iterator it;
+
+    for(it = mandelPromises.begin(); it != mandelPromises.end(); it++)
+    {
+        if(it == mandelPromises.begin())
+        {
+            Mandelset = std::move(it->get());
+            std::cout << Mandelset->getRowSize() << " : " << Mandelset->getColSize() << std::endl;
+        }
+        else
+        {
+            // Get from Promise the unique pointer, dereference it to pass to mergeBelow
+            Mandelset->operator=(Mandelset->mergeBelow(*it->get()));
+        }
+    }
+
+
+    // End Stats
+    std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+    float milliseconds = (float) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000;
+
+    std::cout << std::left << std::setw(TIME_FORMAT) << " HOST:  Mandel Calculate Time: " <<
+              std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
+              " ms." << std::endl;
+
+
+    return Mandelset;
+}
 
 void Propulsion::Mandelbrot::zoomInOnCursor()
 {
@@ -907,50 +1147,39 @@ void Propulsion::Mandelbrot::zoomOutOnCursor()
     POINT cursor;
 
     // Get the cursor position on screen.
-    if(GetCursorPos(&cursor))
-    {
-        if(ScreenToClient(this->hwnd, &cursor))
-        {
-            std::cout << cursor.x << " : " << cursor.y << std::endl;
+    if(GetCursorPos(&cursor)) {
+        // Now that we have position, check if the client area is not negative.
+        // Which means we're in a proper region.
+        if (cursor.x >= 0 && cursor.y >= 0) {
+            // Get x-range and y-range of current window.
+            double xRange = this->rightBound - this->leftBound;
+            double yRange = this->topBound - this->bottomBound;
+
+            // Get graph x and y positions on screen from cursor information.
+            double xPos = this->leftBound + (xRange) * ((double) cursor.x / this->clientWidthPixels);
+            double yPos = this->bottomBound + (yRange) * (1 - (double) cursor.y / this->clientHeightPixels);
+
+
+            //
+            double newXRange = (xRange + xRange * this->zoomFactor) / 2;
+            double newYRange = (yRange + yRange * this->zoomFactor) / 2;
+
+
+            // Now calculate and set new bounds!
+            this->leftBound = xPos - newXRange;
+            this->rightBound = xPos + newXRange;
+            this->bottomBound = yPos - newYRange;
+            this->topBound = yPos + newYRange;
+
+
+            // Change to zoomed, that way a recalculation is performed!
+            this->redraw = true;
+        } else {
+            std::cout << "Can't zoom out on nothing" << std::endl;
         }
-        else
-        {
-            std::cout << "Well this is awkward" << std::endl;
-        }
-    }
-
-    // Now that we have position, check if the client area is not negative.
-    // Negative meaning that
-    if(cursor.x >= 0 && cursor.y >= 0)
-    {
-        // Get x-range and y-range of current window.
-        double xRange = this->rightBound - this->leftBound;
-        double yRange = this->topBound   - this->bottomBound;
-
-        // Get graph x and y positions on screen from cursor information.
-        double xPos = this->leftBound   + (xRange) * (      (double)cursor.x    / this->clientWidthPixels );
-        double yPos = this->bottomBound + (yRange) * ( 1 -  (double)cursor.y    / this->clientHeightPixels);
-
-
-        //
-        double newXRange = (xRange + xRange * this->zoomFactor) / 2;
-        double newYRange = (yRange + yRange * this->zoomFactor) / 2;
-
-
-        // Now calculate and set new bounds!
-        this->leftBound     = xPos - newXRange;
-        this->rightBound    = xPos + newXRange;
-        this->bottomBound   = yPos - newYRange;
-        this->topBound      = yPos + newYRange;
-
-
-        // Change to zoomed, that way a recalculation is performed!
-        this->redraw = true;
     }
     else
     {
-        std::cout << "Can't zoom in on nothing" << std::endl;
+        // Interesting...
     }
 }
-
-

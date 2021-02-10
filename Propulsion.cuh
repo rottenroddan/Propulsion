@@ -47,6 +47,7 @@
 #include <mutex>        // Mutex come on.
 #include <future>       // promises, futures
 #include <thread>       // Multithreading.
+#include <list>
 
 
 #include <windows.h>
@@ -316,7 +317,7 @@ namespace Propulsion {
 
 
 
-        // Get/set Row/Col Matrix
+        // Get/merge Row/Col Matrix
         Matrix<type> getRowMatrix(unsigned row);
         Matrix<type> getColMatrix(unsigned col);
         Matrix<type> getRangeMatrix(unsigned rowStart, unsigned rowEnd, unsigned colStart, unsigned colEnd);
@@ -334,7 +335,7 @@ namespace Propulsion {
         Matrix<type> operator-(Matrix<type> &rhs);
         Matrix<type> operator*(type);
         Matrix<type> operator*(const Matrix<type> &rhs);
-        Matrix<type>& operator=(const Matrix<type>  &r);
+        Matrix<type>& operator=(const Matrix<type>  &rhs);
 
 
 
@@ -349,6 +350,8 @@ namespace Propulsion {
 
         // Numerical Operations.
         static Matrix<type>* backwardSubstitution(Matrix<type> A, Matrix<type> y);
+
+        static Matrix<type> bisectionPoly(Matrix<type> A, type lRange, type rRange, double accuracy);
 
         static void randomRealDistribution(Matrix<type> &A, type lVal, type rVal);
         static void randomRealDistribution(std::shared_ptr<Matrix<type>> A, type lVal, type rVal);
@@ -415,13 +418,22 @@ namespace Propulsion {
          * @param width Total size of horizontal pixels on window creation.
          * @param height Total size of height pixels on window creation.
          */
-        explicit Mandelbrot(unsigned width = 640, unsigned height = 480, double leftBound = -2.0, double rightBound = 2.0, double topBound = 2.0, double bottomBound = -2.0, double zoomFactor = .250);
+        explicit Mandelbrot(unsigned width = 640, unsigned height = 480, double leftBound = -2.0, double rightBound = 2.0, double topBound = 2.0, double bottomBound = -2.0, double zoomFactor = .125);
 
         void simulate();
+
+        std::unique_ptr<Propulsion::Matrix<int>> static test(std::shared_ptr<Propulsion::Matrix<double>>);
 
         std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelSingleThreaded(unsigned wPixels, unsigned hPixels, double leftBound,
                                                                                       double rightBound, double topBound, double bottomBound,
                                                                                       unsigned maxIterations,std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
+        std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelAVX256(unsigned wPixels, unsigned hPixels, double leftBound,
+                                                                                      double rightBound, double topBound, double bottomBound,
+                                                                                      unsigned maxIterations,std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
+        std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelMultiThreaded(unsigned threads, unsigned wPixels, unsigned hPixels, double leftBound, double rightBound,
+                                                                            double topBound, double bottomBound, unsigned maxIterations,
+                                                                            std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
+
         std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelCUDA(unsigned wPixels, unsigned hPixels, double leftBound, double rightBound,
                                                                             double topBound, double bottomBound, unsigned maxIterations,
                                                                             std::shared_ptr< Propulsion::Matrix< int>> colorPicker);

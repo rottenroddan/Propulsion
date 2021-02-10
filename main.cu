@@ -934,14 +934,14 @@ int main()
     //test_two_dimensional_array_operations();
 
     test_one_dimensional_array_operations();
+    secondMatrixTests();
 
-    //furryTestClassifier();
 
 
-    /*
     Propulsion::Mandelbrot M(640,480);
     M.simulate();
 
+    /*
     Propulsion::Matrix<double> R(1000,1000);
     Propulsion::Matrix<double>::randomRealDistribution(R, -1.0, 1.0);
 
@@ -953,7 +953,7 @@ int main()
     }*/
 
 
-    secondMatrixTests();
+
 
 
 
