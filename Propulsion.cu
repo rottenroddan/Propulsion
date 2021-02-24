@@ -347,11 +347,11 @@ template<typename type> void Propulsion::hostDotProduct(type *A, type*B, type *C
     if(printTime){
         // Create ending point for timer.
         std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-        float milliseconds = (float) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000;
+        float milliseconds = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000;
 
-        std::cout << std::left << std::setw(TIME_FORMAT) << " HOST:  1D Array Scalar: " <<
+        std::cout << std::left << std::setw(TIME_FORMAT) << " HOST:  Matrix Dot Product: " <<
                   std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
-                  " ms." << std::setw(TIME_WIDTH) << (aRows * aColsBRows * bCols * sizeof(type)) / milliseconds / 1e6 << " GB/s" << std::endl;
+                  " ms." << std::setw(TIME_WIDTH) << ((double)aRows * (double)aColsBRows * (double)bCols * (double)sizeof(type)) / (double)milliseconds / 1e6 << " GB/s" << std::endl;
     }
     return;
 }
@@ -427,7 +427,7 @@ void Propulsion::cudaDotProduct(type *a, type *b, type *c, unsigned aRows, unsig
     if(printTime){
         std::cout << std::left << std::setw(TIME_FORMAT) << " CUDA:  Matrix Multiplication: " <<
                   std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
-                  " ms." << std::setw(TIME_WIDTH) << (aRows * aColsBRows * bCols * sizeof(type)) / milliseconds / 1e6 << " GB/s" << std::endl;
+                  " ms." << std::setw(TIME_WIDTH) << ((double)aRows * (double)aColsBRows * (double)bCols * (double)sizeof(type)) / (double)milliseconds / 1e6 << " GB/s" << std::endl;
     }
 
     gpuErrchk(cudaEventDestroy(start));

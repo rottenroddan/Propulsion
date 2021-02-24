@@ -331,6 +331,32 @@ void Propulsion::Matrix<type>::add(const Matrix<type>& b, bool printTime)
     }
 }
 
+template <typename type>
+void Propulsion::Matrix<type>::add(const Matrix<type>&& b, bool printTime)
+{
+    if(b.rows == this->rows && b.cols == this->cols)
+    {
+        auto temp = std::make_unique<type[]>(this->rows * this->cols);
+        // Use CUDA to speed up the process.
+        if(this->totalSize >= MATRIX_CUDA_ADD_DIFF_ELEM_SIZE)
+        {
+            cudaAdd1DArraysWithStride(this->M.get(), b.M.get(), temp.get(), this->rows * this->cols, printTime);
+            this->M = std::move(temp);
+        }
+            // Else just do it via HOST avx.
+        else
+        {
+            Propulsion::hostAdd1DArraysAVX256(this->getArray(), b.M.get(), temp.get(), this->totalSize, printTime);
+        }
+    }
+    else
+    {
+        std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  + ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")";
+        throw Propulsion::Matrix<type>::MatrixException(err.c_str(),
+                                                        __FILE__, __LINE__, "add" , "Addition Requires all dimension sizes to be the same as the operation is element wise.");
+    }
+}
+
 
 template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::addRowVector(Matrix<type> &b)
@@ -368,7 +394,77 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::addRowVector(Matrix<type> &b)
 }
 
 template<typename type>
+Propulsion::Matrix<type> Propulsion::Matrix<type>::addRowVector(Matrix<type> &&b)
+{
+    // Create return matrix. Initialized as 1x1 zero matrix.
+    Propulsion::Matrix<type> ret;
+
+    // Check if the rowVector can even be added to this. And check if b is a vector.
+    if(this->cols == b.cols && b.rows == 1)
+    {
+        // Set the return matrix to the size of this.
+        ret.rows = this->rows;
+        ret.cols = this->cols;
+        ret.totalSize = this->totalSize;
+        ret.M = std::make_unique<type[]>(this->totalSize);
+
+        // Loop through every element of this, add the jth element from be to every (i,j) of this.
+        for(unsigned i = 0; i < this->rows; i++)
+        {
+            for(unsigned j = 0; j < this->cols; j++)
+            {
+                ret(i,j) = this->at(i,j) + b(j);
+            }
+        }
+    }
+    else
+    {
+        // Error for add row vector
+        std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  +
+                          ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")" + ". Expected second Matrix to be ( 1, " + std::to_string(b.cols) + ")";
+        throw Propulsion::Matrix<type>::MatrixException(err.c_str(),__FILE__, __LINE__, "addRowVector" ,
+                                                        "addRowVector Requires that the argument be a row vector such that it is 1xn in DIM.");
+    }
+    return ret;
+}
+
+template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::addColVector(Matrix<type> &b)
+{
+    // Create return matrix. Initialized as 1x1 zero matrix.
+    Propulsion::Matrix<type> ret;
+
+    // Check if the colVector can even be added to the matrix.
+    if(this->rows == b.rows && b.cols == 1)
+    {
+        // Set the return matrix to the size of this.
+        ret.rows = this->rows;
+        ret.cols = this->cols;
+        ret.totalSize = this->totalSize;
+        ret.M = std::make_unique<type[]>(this->totalSize);
+
+        // Loop through every element of this, add the ith element from be to every (i,j) of this.
+        for(unsigned i = 0; i < this->rows; i++)
+        {
+            for(unsigned j = 0; j < this->cols; j++)
+            {
+                ret(i,j) = this->at(i,j) + b(i);
+            }
+        }
+    }
+    else
+    {
+        // Error for add row vector
+        std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  +
+                          ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")" + ". Expected second Matrix to be ( " + std::to_string(b.rows) + ", 1)";
+        throw Propulsion::Matrix<type>::MatrixException(err.c_str(),__FILE__, __LINE__, "addColVector" ,
+                                                        "addColVector Requires that the argument be a row vector such that it is nx1 in DIM.");
+    }
+    return ret;
+}
+
+template<typename type>
+Propulsion::Matrix<type> Propulsion::Matrix<type>::addColVector(Matrix<type> &&b)
 {
     // Create return matrix. Initialized as 1x1 zero matrix.
     Propulsion::Matrix<type> ret;
@@ -458,44 +554,34 @@ void Propulsion::Matrix<type>::dot(const Matrix<type> &b, bool printTime)
 {
     if(this->cols == b.rows)
     {
-        if(this->totalSize >= MATRIX_CUDA_DOT_ELEM_SIZE)
+        // Get size of new Matrix
+        unsigned newSize = this->rows * b.cols;
+        auto multiplyArray = std::make_unique<type[]>(newSize);
+
+        // Case its a 1x1.
+        if(this->totalSize == 1 && b.totalSize == 1)
         {
-            this->cudaDotProduct(b);
+            multiplyArray[0] = this->M[0] * b.M[0];
         }
         else {
-            // Get size of new Matrix
-            unsigned newSize = this->rows * b.cols;
-            auto multiplyArray = std::make_unique<type[]>(newSize);
-
-
-
-            // Case its a 1x1.
-            if(this->totalSize == 1 && b.totalSize == 1)
-            {
-                multiplyArray[0] = this->M[0] * b.M[0];
+            /*
+            for (unsigned r = 0; r < this->rows; r++) {
+            for (unsigned c = 0; c < b.cols; c++) {
+            for (unsigned i = 0; i < this->cols; i++) {
+            sum += at(r, i) * b.M[i * b.cols + c];
             }
-            else {
-                /*
-                for (unsigned r = 0; r < this->rows; r++) {
-                    for (unsigned c = 0; c < b.cols; c++) {
-                        for (unsigned i = 0; i < this->cols; i++) {
-                            sum += at(r, i) * b.M[i * b.cols + c];
-                        }
-                        multiplyArray[n] = sum;
-                        sum = 0;
-                        n++;
-                    }
-                }*/
-
-                Propulsion::hostDotProduct(this->getArray(), b.M.get(), multiplyArray.get(), this->rows, this->cols, b.cols, printTime);
+            multiplyArray[n] = sum;
+            sum = 0;
+            n++;
             }
+            }*/
 
-
-
-            this->cols = b.cols;        // If you know, you know. AB: A * B is 2x3 - 3x3: New Matrix is 2(this rows)x3(b cols).
-            this->totalSize = newSize;  // set the totalSize of this to the new size of the product matrix.
-            this->M = std::move(multiplyArray);
+            Propulsion::hostDotProduct(this->getArray(), b.M.get(), multiplyArray.get(), this->rows, this->cols, b.cols, printTime);
         }
+
+        this->cols = b.cols;        // If you know, you know. AB: A * B is 2x3 - 3x3: New Matrix is 2(this rows)x3(b cols).
+        this->totalSize = newSize;  // set the totalSize of this to the new size of the product matrix.
+        this->M = std::move(multiplyArray);
     }
     else
     {
@@ -627,10 +713,6 @@ void Propulsion::Matrix<type>::strassenMultiplication(const Matrix<type> &rb)
             C = C.removeRow(this->rows);    // Remove Last row i times.
         }
 
-        /*
-        auto C = recursiveStrassen(A,B);
-
-        *this = C;*/
         *this = C;
     }
     else

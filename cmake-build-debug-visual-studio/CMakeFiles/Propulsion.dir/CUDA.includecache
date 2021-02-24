@@ -157,6 +157,8 @@ windows.system.h
 -
 cuda_runtime.h
 C:/Users/steve/CLionProjects/Propulsion/cuda_runtime.h
+cublas.h
+C:/Users/steve/CLionProjects/Propulsion/cublas.h
 device_launch_parameters.h
 C:/Users/steve/CLionProjects/Propulsion/device_launch_parameters.h
 

@@ -1,48 +1,34 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include <string>
 #include "Propulsion.cuh"
 #include <windows.system.h>
 #include "cuda_runtime.h"
+#include "cublas.h"
 #include "device_launch_parameters.h"
 
-// Function:    add(int a, int b, int *c)
-// @params:     @a - First Number.
-//              @b - Second Number for Summation.
-//              @c - Pointer to where the sum is stored.
-//
-// Desc:        The purpose of this function is to simply demonstrate how a kernel can be created on CUDA. This
-//              is a basic example of how to add two numbers together and store the result via pointer.
-// ~Usage~
-//    int a,b,c;    // Create int vars,
-//    int *dev_c;   // Pointer for the device to use
-//
-//    a = 3;
-//    b = 4;
-//
-//    cudaMalloc((void**)&dev_c, sizeof(int));  // Create a pointer to a pointer of int, creates memory for
-//    add<<<1,1>>>(a,b,dev_c);
-//    cudaMemcpy(&c, dev_c, sizeof(int), cudaMemcpyDeviceToHost);
-__global__ void add(int a, int b, int *c)
+void printExceptionTestResults(std::string msg, bool passedOrFailed, std::string fileName, unsigned lineNum)
 {
-    *c = a + b;
-}
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    GetConsoleScreenBufferInfo(hStdout, &info);
+    WORD origAttr = info.wAttributes;
 
-template <typename T>
-__global__ void addArrays(T *a, T *b, T *c, long long int COLS)
-{
-    uint32_t x = blockIdx.x; // Gets the X block id.
-    uint32_t y = blockIdx.y; // Gets the Y block id.
-    uint32_t i = (COLS*y) + x;
-    c[i] = a[i] + b[i];
-}
+    if(passedOrFailed)
+    {
+        SetConsoleTextAttribute(hStdout, 10);
+        std::cout << "Passed: " << msg << std::endl;
+    }
+    else
+    {
+        SetConsoleTextAttribute(hStdout, 12);
+        std::cout << "Failed: " << msg << " On line: " << lineNum << " of File: " << fileName << std::endl;
+    }
 
-template<typename T, size_t R, size_t C>
-void addVector(T (&a)[R][C], T (&b)[R][C], T (&c)[R][C], const long long ROWS, const long long COLS)
-{
-    std::cout << "How" << std::endl;
+    SetConsoleTextAttribute(hStdout, origAttr);
 }
 
 template <typename type> void printError1D(type *hostC, type *cudaC, unsigned C)
@@ -565,18 +551,6 @@ void matrixFunctions()
         std::cout << "DiagC is just a lower Triangle and not an Upper!" << std::endl;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
     /*
     Propulsion::ArtificialNeuralNetwork ANN(&in, &out);
     ANN.createSynapsesLayer(1);
@@ -648,25 +622,27 @@ void secondMatrixTests()
     auto B = A;
     if(A == B)
     {
-        std::cout << "Passed(Equality Operator & Copy Constructor)" << std::endl;
+        printExceptionTestResults("(Equality Operator & Copy Constructor)", true, __FILE__, __LINE__);
+        //std::cout << "Passed(Equality Operator & Copy Constructor)" << std::endl;
+
     }
     else
     {
-        std::cout << "Failed(Equality Operator or Copy Constructor)" << std::endl;
+        printExceptionTestResults("(Equality Operator or Copy Constructor)", false, __FILE__, __LINE__);
     }
 
     auto C = A * B;
     if(C == B)
     {
-        std::cout << "Failed(rValue and Copy Constructor)-> C should not equal B" << std::endl;
+        printExceptionTestResults("(rValue and Copy Constructor)-> C should not equal B", false, __FILE__, __LINE__);
     }
     else if(C == A)
     {
-        std::cout << "Failed(rValue and Copy Constructor)-> C should not equal A" << std::endl;
+        printExceptionTestResults("(rValue and Copy Constructor)-> C should not equal A", false, __FILE__, __LINE__);
     }
     else
     {
-        std::cout << "Passed(rValue and Copy Constructor)" << std::endl;
+        printExceptionTestResults("(rValue and Copy Constructor)", true, __FILE__, __LINE__);
     }
 
     // Verify Addition works
@@ -681,7 +657,7 @@ void secondMatrixTests()
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Passed(Add Exception throw)->Exception: " << e.what() << std::endl;
+        printExceptionTestResults(std::string("(Add Exception throw)->Exception: ") + e.what(), true, __FILE__, __LINE__);
     }
     try{
         Propulsion::Matrix<double> addA(687, 888);
@@ -692,11 +668,11 @@ void secondMatrixTests()
 
         addA.add(addB);
 
-        std::cout << "Passed(Add Didn't Throw Exception on good data!)" << std::endl;
+        printExceptionTestResults(std::string("(Add Didn't Throw Exception on good data)"), true, __FILE__, __LINE__);
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Failed(Add Should not Throw Exception)->Exception: " << e.what() << std::endl;
+        printExceptionTestResults(std::string("(Add Should not Throw Exception)->Exception: ") + e.what(), false, __FILE__, __LINE__);
     }
 
     /*
@@ -711,11 +687,11 @@ void secondMatrixTests()
 
         auto arvC = arvA.addRowVector(arvB);
 
-        std::cout << "Passed(addRowVector)" << std::endl;
+        printExceptionTestResults("(addRowVector)", true, __FILE__, __LINE__);
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Failed(addRowVector should not throw an exception)->Exception: " << e.what() << std::endl;
+        printExceptionTestResults(std::string("(addRowVector)") + e.what(), false, __FILE__, __LINE__);
     }
     try{
         Propulsion::Matrix<double> arvA(3, 2);
@@ -726,11 +702,11 @@ void secondMatrixTests()
 
         auto arvC = arvA.addRowVector(arvB);
 
-        std::cout << "Failed(addRowVector should throw an exception)" << std::endl;
+        printExceptionTestResults(std::string("(addRowVector should throw an exception)"), false, __FILE__, __LINE__);
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Passed(addRowVector should throw an exception)->Exception: " << e.what() << std::endl;
+        printExceptionTestResults(std::string("Passed(addRowVector should throw an exception)->Exception: ") + e.what(), true, __FILE__, __LINE__);
     }
 
     /*
@@ -745,11 +721,11 @@ void secondMatrixTests()
 
         auto acvC = acvA.addColVector(acvB);
 
-        std::cout << "Passed(addColVector)" << std::endl;
+        printExceptionTestResults(std::string("(addColVector)"), true, __FILE__, __LINE__);
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Failed(addColVector should not throw an exception)->Exception: " << e.what() << std::endl;
+        printExceptionTestResults(std::string("(addColVector should not throw an exception)->Exception: ") + e.what(), true, __FILE__, __LINE__);
     }
     try{
         Propulsion::Matrix<double> acvA(2, 3);
@@ -760,11 +736,11 @@ void secondMatrixTests()
 
         auto acvC = acvA.addColVector(acvB);
 
-        std::cout << "Failed(addColVector should throw an exception)" << std::endl;
+        printExceptionTestResults(std::string("Failed(addColVector should throw an exception)"), false, __FILE__, __LINE__);
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Passed(addColVector threw an exception)->Exception: " << e.what() << std::endl;
+        printExceptionTestResults(std::string("(addColVector threw an exception)->Exception: ") + e.what(), true, __FILE__, __LINE__);
     }
 
     /*
@@ -779,11 +755,12 @@ void secondMatrixTests()
 
         subA.subtract(subB);
 
-        std::cout << "Passed(subtract)" << std::endl;
+        printExceptionTestResults(std::string("(subtract)"), true, __FILE__, __LINE__);
+
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Failed(subtract should not throw an exception)->Exception: " << e.what() << std::endl;
+        printExceptionTestResults(std::string("(subtract should not throw an exception)->Exception: ") + e.what(), false, __FILE__, __LINE__);
     }
 
     try{
@@ -794,12 +771,11 @@ void secondMatrixTests()
         Propulsion::Matrix<double>::randomRealDistribution(subB, -1.0, 1.0);
 
         subA.subtract(subB);
-
-        std::cout << "Failed(subtract should throw an exception)" << std::endl;
+        printExceptionTestResults(std::string("(subtract should throw an exception)"), false, __FILE__, __LINE__);
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Passed(subtract should throw an exception)->Exception: " << e.what() << std::endl;
+        printExceptionTestResults(std::string("(subtract should throw an exception)->Exception: ") + e.what(), true, __FILE__, __LINE__);
     }
 
     /*
@@ -814,11 +790,11 @@ void secondMatrixTests()
 
         multA.cudaDotProduct(multB);
 
-        std::cout << "Failed(cudaMultiplyMatrices should throw an exception)" << std::endl;
+        printExceptionTestResults(std::string("Failed(cudaMultiplyMatrices should throw an exception)"), false, __FILE__, __LINE__);
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Passed(cudaMultiplyMatrices should throw an exception)->Exception: " << e.what() <<std::endl;
+        printExceptionTestResults(std::string("Passed(cudaMultiplyMatrices should throw an exception)->Exception: ") + e.what(), true, __FILE__, __LINE__);
     }
     try{
         Propulsion::Matrix<double> multA(4, 123);
@@ -829,11 +805,11 @@ void secondMatrixTests()
 
         multA.cudaDotProduct(multB);
 
-        std::cout << "Passed(cudaMultiplyMatrices)" << std::endl;
+        printExceptionTestResults(std::string("(cudaMultiplyMatrices)"), true, __FILE__, __LINE__);
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Failed(cudaMultiplyMatrices should not throw an exception)->Exception: " << e.what() << std::endl;
+        printExceptionTestResults(std::string("(cudaMultiplyMatrices should not throw an exception)->Exception: ") + e.what(), false, __FILE__, __LINE__);
     }
 
     /*
@@ -848,11 +824,11 @@ void secondMatrixTests()
 
         multA.cudaDotProduct(multB);
 
-        std::cout << "Failed(dot should throw an exception)" << std::endl;
+        printExceptionTestResults(std::string("(dot should throw an exception)"), false, __FILE__, __LINE__);
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Passed(dot should throw an exception)->Exception: " << e.what() <<std::endl;
+        printExceptionTestResults(std::string("(dot should throw an exception)->Exception: ") + e.what(), true, __FILE__, __LINE__);
     }
     try{
         Propulsion::Matrix<int> multA(206, 123);
@@ -869,14 +845,16 @@ void secondMatrixTests()
 
         if(multA == cudaA)
         {
-            std::cout << "Passed(dot vs cudaDot equality)" << std::endl;
+            printExceptionTestResults(std::string("(dot vs cudaDot equality)"), true, __FILE__, __LINE__);
         }
-
-        std::cout << "Passed(dot)" << std::endl;
+        else
+        {
+            printExceptionTestResults(std::string("(dot vs cudaDot equality)"), false, __FILE__, __LINE__);
+        }
     }
     catch (Propulsion::Matrix<double>::MatrixException &e)
     {
-        std::cout << "Failed(dot should not throw an exception)->Exception: " << e.what() << std::endl;
+        printExceptionTestResults(std::string("Failed(dot should not throw an exception)->Exception: ") + e.what(), false, __FILE__, __LINE__);
     }
     std::cout << "Testing Matrix Dot Product Speed..." << std::endl
             << "Results: " << std::endl;
@@ -906,6 +884,100 @@ void secondMatrixTests()
     }
 }
 
+void matrixMultiplicationTests()
+{
+    // Declare clock times.
+    std::chrono::high_resolution_clock::time_point start;
+    std::chrono::high_resolution_clock::time_point end;
+
+    // square matrix sizes to test speeds on
+    unsigned SZ[] = {128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768};
+
+
+    double cpuTimes[sizeof(SZ)];
+    double strassenTimes[sizeof(SZ)];
+    double cudaTimes[sizeof(SZ)];
+
+    // Stats header for the user.
+    std::cout << "Matrix Multiplication Performance Tests" << std::endl
+              << "-----(DIMS)-----|-----CPU NAIVE----|---CPU STRASSEN---|----CUDA NAIVE----|" << std::endl;
+
+    for(unsigned i = 0; i < sizeof(SZ) / sizeof(unsigned); i++)
+    {
+        // Create new A & B matrices with the SZxSZ as dims.
+        Propulsion::Matrix<float> A(SZ[i], SZ[i]);
+        Propulsion::Matrix<float> B(SZ[i], SZ[i]);
+
+        // Populate with random values.
+        Propulsion::Matrix<float>::randomRealDistribution(A, -1.0, 1.0);
+        Propulsion::Matrix<float>::randomRealDistribution(B, -1.0, 1.0);
+
+        Propulsion::Matrix<float> aCpuCopy = A;
+        Propulsion::Matrix<float> aStrassenCopy = A;
+
+
+        // Time the cpu dot product of B
+        start = std::chrono::high_resolution_clock::now();
+        if(SZ[i] <= 8192) {
+            aCpuCopy.dot(B, false);
+            end = std::chrono::high_resolution_clock::now();
+            cpuTimes[i] = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
+        }
+        else
+        {
+            cpuTimes[i] = 0.0;
+        }
+
+
+        // Time the cpu on strassen multiplication
+        start = std::chrono::high_resolution_clock::now();
+        aStrassenCopy.strassenMultiplication(B);
+        end = std::chrono::high_resolution_clock::now();
+        strassenTimes[i] = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
+
+        // Time the cuda dot product of B
+        start = std::chrono::high_resolution_clock::now();
+        A.cudaDotProduct(B, false);
+        end = std::chrono::high_resolution_clock::now();
+        cudaTimes[i] = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
+
+
+        std::ostringstream oStr;
+
+        // Print Stats to the user:
+        if(cpuTimes[i] != 0.0) {
+
+            oStr << std::fixed << std::setprecision(2) << cpuTimes[i];
+        }
+        else
+        {
+            oStr << "...";
+        }
+
+        std::cout << std::setw(7) << std::right << std::to_string(SZ[i]) << " x " << std::setw(6) << std::left << std::to_string(SZ[i]) << "|" << std::right
+                  << std::setprecision(2) << std::fixed
+                  << std::setw(14) << oStr.str() << " ms." << "|"
+                  << std::setw(14) << strassenTimes[i] << " ms." << "|"
+                  << std::setw(14) << cudaTimes[i] << " ms." <<  "|" << std::endl;
+
+    }
+
+    /*
+    std::cout << "Matrix Multiplication Performance Tests" << std::endl
+            << "-----(DIMS)-----|---CPU NAIVE------|---CPU STRASSEN---|---CUDA NAIVE-----|" << std::endl;
+
+
+    for(unsigned i = 0; i < sizeof(SZ)/sizeof(unsigned); i++)
+    {
+        std::cout << std::setw(7) << std::right << std::to_string(SZ[i]) << " x " << std::setw(6) << std::left << std::to_string(SZ[i]) << "|" << std::right
+                    << std::setprecision(2) << std::fixed
+                    << std::setw(14) << cpuTimes[i] << " ms." << "|"
+                    << std::setw(14) << strassenTimes[i] << " ms." << "|"
+                    << std::setw(14) << cudaTimes[i] << " ms." <<  "|" << std::endl;
+    }*/
+
+}
+
 void aiClassifier()
 {
     auto A = Propulsion::ArtificialNeuralNetwork();
@@ -914,6 +986,7 @@ void aiClassifier()
 
 int main()
 {
+    /*
     std::cout << std::endl << std::endl <<
               " 222222222222222         DDDDDDDDDDDDD\n" <<
               "2:::::::::::::::22       D::::::::::::DDD\n" <<
@@ -930,8 +1003,7 @@ int main()
               "2:::::2       222222     DDD:::::DDDDD:::::D\n" <<
               "2::::::2222222:::::2     D:::::::::::::::DD\n" <<
               "2::::::::::::::::::2     D::::::::::::DDD\n" <<
-              "22222222222222222222     DDDDDDDDDDDDD\n\n"; //        arrays....
-    //test_two_dimensional_array_operations();
+              "22222222222222222222     DDDDDDDDDDDDD\n\n"; //        arrays....*/
 
     test_one_dimensional_array_operations();
     secondMatrixTests();
@@ -952,8 +1024,7 @@ int main()
         std::cout << "Wow" << std::endl;
     }*/
 
-
-
+    matrixMultiplicationTests();
 
 
 

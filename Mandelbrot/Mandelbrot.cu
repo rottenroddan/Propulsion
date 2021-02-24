@@ -14,8 +14,8 @@
 
 bool activeApp = false;
 
-unsigned ITER_STEPS[] = {125,2000,5000, 100000, 200000, 500000, 1000000};
-unsigned STEP_SIZE = 7;
+unsigned ITER_STEPS[] = {125, 125, 250, 250, 500, 500, 1000, 1000, 1500, 1500, 2000, 2000, 5000, 5000, 10000, 10000, 20000, 20000, 50000, 50000, 100000,100000, 200000, 200000, 500000, 500000, 1000000, 1000000};
+unsigned STEP_SIZE = 28;
 
 
 std::mutex mutexPainting;
@@ -40,6 +40,12 @@ Propulsion::Mandelbrot::Mandelbrot(unsigned int width, unsigned int height, doub
 
     generateColorScheme(this->iterations);
     this->epoch = std::make_unique<Matrix<unsigned>>(ITER_STEPS , 1, STEP_SIZE);
+}
+
+
+void Propulsion::Mandelbrot::generateColorSchemeV2(unsigned int totalColors, Matrix<int> colors, Matrix<double> percentageBounds)
+{
+
 }
 
 
@@ -479,6 +485,13 @@ void Propulsion::Mandelbrot::paintWindow()
             // Generate new color scheme as iterations have gone up!
             generateColorScheme(this->iterations);
 
+            /*
+            int colorArray[] = {};
+
+            Matrix<int> ()
+
+            generateColorSchemeV2(this->iterations, colors, colorPercentageBounds);*/
+
             // Calculate Mandel
             /*
             this->Mandel = calculateMandelSingleThreaded(this->clientWidthPixels, this->clientHeightPixels,
@@ -488,17 +501,20 @@ void Propulsion::Mandelbrot::paintWindow()
             /*
             this->Mandel = calculateMandelAVX256(this->clientWidthPixels, this->clientHeightPixels,
                                                  this->leftBound, this->rightBound, this->topBound,
-                                                 this->bottomBound, this->iterations,this->colorPicker);
+                                                 this->bottomBound, this->iterations,this->colorPicker);*/
 
-            /*
+
             this->Mandel = calculateMandelCUDA(this->clientWidthPixels, this->clientHeightPixels,
                                                this->leftBound, this->rightBound, this->topBound,
                                                this->bottomBound, this->iterations,this->colorPicker);
-            */
 
+
+            /*
             this->Mandel = calculateMandelMultiThreaded(16,this->clientWidthPixels, this->clientHeightPixels,
                                                this->leftBound, this->rightBound, this->topBound,
-                                               this->bottomBound, this->iterations,this->colorPicker);
+                                               this->bottomBound, this->iterations,this->colorPicker); */
+
+
 
             // Calculate total copy constructor time + process time.
             std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
@@ -689,9 +705,6 @@ void Propulsion::Mandelbrot::simulate()
 
     // Start clock for mandel calculation
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-
-    // Calculate total copy constructor time + process time.
-    std::chrono::high_resolution_clock::time_point end;
 
 
     // Event loop
@@ -986,6 +999,33 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
             // | 4 | 5 | 6 | 7 |
             _j = _mm256_add_pd(_j, _four);
         }
+        if(boundedRange != Mandelset->getColSize()) {
+            double complexYValue = topBound - complexIncrementer*i;
+            for (unsigned j2 = boundedRange; j2 < Mandelset->getColSize(); j2++) {
+                // The current values we are calculating. Scaled from the current pixel.
+                double realXValue = leftBound + realIncrementer * j2;
+
+                double zx = 0;
+                double zy = 0;
+
+                unsigned n = 0;
+                while (zx * zx + zy * zy <= 4 && n < maxIterations) {
+                    double tempx = zx * zx - zy * zy + realXValue;
+                    zy = 2 * zx * zy + complexYValue;
+                    zx = tempx;
+                    n += 1;
+                }
+
+                // find out
+                if (n == maxIterations) {
+                    // Set to Black
+                    Mandelset->at(i, j2) = 0x000000;
+                } else {
+                    // Set to White
+                    Mandelset->at(i, j2) = colorPicker->at(n);
+                }
+            }
+        }
     }
 
     std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
@@ -1156,8 +1196,8 @@ void Propulsion::Mandelbrot::zoomOutOnCursor()
             double yRange = this->topBound - this->bottomBound;
 
             // Get graph x and y positions on screen from cursor information.
-            double xPos = this->leftBound + (xRange) * ((double) cursor.x / this->clientWidthPixels);
-            double yPos = this->bottomBound + (yRange) * (1 - (double) cursor.y / this->clientHeightPixels);
+            double xPos = (double)this->leftBound + (xRange) * ((double) cursor.x / (double)this->clientWidthPixels);
+            double yPos = (double)this->bottomBound + (yRange) * (1.0 - (double) cursor.y / (double)this->clientHeightPixels);
 
 
             //

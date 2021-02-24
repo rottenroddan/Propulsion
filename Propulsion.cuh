@@ -104,6 +104,14 @@ namespace Propulsion {
     class Matrix
     {
     public:
+        /*
+         * Class:        MatrixException
+         *
+         * Purpose:         The purpose of this class is for the user to be able to handle
+         *              exceptions thrown for the matrix class. These exceptions can be thrown
+         *              for many various reasons all described in the throw. Child class of
+         *              std::exception to inherit various methods.
+         */
         class MatrixException : public std::exception
         {
         private:
@@ -118,19 +126,13 @@ namespace Propulsion {
                             file(file_),
                             line(line_),
                             func(func_),
-                            info(info_)
-            {
-
-            }
+                            info(info_){}
 
 
             const char* get_file() const { return file; }
             int get_line() const { return line; }
             const char* get_func() const { return func; }
             const char* get_info() const { return info; }
-
-
-
         };
 
         // Enumerators for the values that can be initialized into a constructor of Matrix.
@@ -150,6 +152,12 @@ namespace Propulsion {
          */
         Matrix();
 
+        /*
+         * Function:    Matrix(const Matrix& copyM)
+         * @params:     @copyM - Matrix to be deep copied.
+         *
+         * Purpose:         Constructor to deep copy another Matrix. 
+         */
         Matrix(const Matrix&);
 
         /*
@@ -280,9 +288,15 @@ namespace Propulsion {
 
         // Matrix Math Related Functions
         void add( const Matrix<type> &b, bool printTime = false);
+        void add( const Matrix<type> &&b, bool printTime = false);
+
         Matrix<type> addRowVector(Matrix<type> &b);
+        Matrix<type> addRowVector(Matrix<type> &&b);
         Matrix<type> addColVector(Matrix<type> &b);
+        Matrix<type> addColVector(Matrix<type> &&b);
+
         void subtract( const Matrix<type> &b);
+        void subtract( const Matrix<type> &&b);
         void cudaDotProduct(const Matrix<type> &b, bool printTime = false);
         void dot(const Matrix<type> &b, bool printTime = false);
         void schurProduct(const Matrix<type> &b, bool printTime = false);
@@ -411,6 +425,7 @@ namespace Propulsion {
         void zoomInOnCursor();
         void zoomOutOnCursor();
         void generateColorScheme(unsigned totalColors);
+        void generateColorSchemeV2(unsigned totalColors, Matrix<int> colors, Matrix<double> percentageBounds);
 
     public:
         /*

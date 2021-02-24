@@ -1,9 +1,4 @@
 "C:\Program Files\JetBrains\CLion 2020.1.2\bin\cmake\win\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Release -G "CodeBlocks - NMake Makefiles" C:\Users\steve\CLionProjects\Propulsion
--- The CUDA compiler identification is NVIDIA 11.0.194
--- Check for working CUDA compiler: C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.0/bin/nvcc.exe
--- Check for working CUDA compiler: C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.0/bin/nvcc.exe -- works
--- Detecting CUDA compiler ABI info
--- Detecting CUDA compiler ABI info - done
 -- Configuring done
 -- Generating done
 -- Build files have been written to: C:/Users/steve/CLionProjects/Propulsion/cmake-build-release
