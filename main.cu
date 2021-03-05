@@ -891,7 +891,7 @@ void matrixMultiplicationTests()
     std::chrono::high_resolution_clock::time_point end;
 
     // square matrix sizes to test speeds on
-    unsigned SZ[] = {128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768};
+    unsigned SZ[] = {128, 256, 512, 1024, 2048, 4096, 8192, 16384};
 
 
     double cpuTimes[sizeof(SZ)];
@@ -915,10 +915,12 @@ void matrixMultiplicationTests()
         Propulsion::Matrix<float> aCpuCopy = A;
         Propulsion::Matrix<float> aStrassenCopy = A;
 
+        A.add(A + B);
+
 
         // Time the cpu dot product of B
         start = std::chrono::high_resolution_clock::now();
-        if(SZ[i] <= 8192) {
+        if(SZ[i] < 8192) {
             aCpuCopy.dot(B, false);
             end = std::chrono::high_resolution_clock::now();
             cpuTimes[i] = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
@@ -937,7 +939,7 @@ void matrixMultiplicationTests()
 
         // Time the cuda dot product of B
         start = std::chrono::high_resolution_clock::now();
-        A.cudaDotProduct(B, false);
+        A.cudaDotProduct(A + B, false);
         end = std::chrono::high_resolution_clock::now();
         cudaTimes[i] = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
 

@@ -131,12 +131,6 @@ PropulsionVectorOperations.cu
 C:/Users/steve/CLionProjects/Propulsion/PropulsionVectorOperations.cu
 Propulsion.cu
 C:/Users/steve/CLionProjects/Propulsion/Propulsion.cu
-Propulsion2DMatrixArrayFunctions.cu
-C:/Users/steve/CLionProjects/Propulsion/Propulsion2DMatrixArrayFunctions.cu
-
-C:/Users/steve/CLionProjects/Propulsion/Propulsion2DMatrixArrayFunctions.cu
-Propulsion.cuh
-C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
 
 C:/Users/steve/CLionProjects/Propulsion/PropulsionVectorOperations.cu
 Propulsion.cuh
@@ -148,6 +142,8 @@ chrono
 iomanip
 -
 iostream
+-
+sstream
 -
 string
 -

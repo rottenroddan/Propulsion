@@ -30,11 +30,11 @@ __global__ void mandelbrotCalculate(int *d_output, int *d_colorPicker, int wPixe
 
         if(n == maxIterations)
         {
-            d_output[tRow * wPixels + tCol] = 0x000000;
+            d_output[tRow * wPixels + tCol] = d_colorPicker[n-1];
         }
         else
         {
-            d_output[tRow * wPixels + tCol] = d_colorPicker[n];
+            d_output[tRow * wPixels + tCol] = d_colorPicker[n-1];
         }
     }
 }

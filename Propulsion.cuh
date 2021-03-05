@@ -247,9 +247,9 @@ namespace Propulsion {
          *                          4,5,67,8,
          *                          4,4,4,4};
          *
-         *              Propulsion::Matrix<int> M(4,4,Propulsion::Matrix<int>::custom, 5,Propulsion::Matrix<int>::def);
+         *              Propulsion::Matrix<int> M(d,4,4);
          *              M.print();
-         *              ***prints on command:
+         *              ***prints:
          *              |   1   2   3   4 |
          *              |   7   8   9   5 |
          *              |   4   5  67   8 |
@@ -288,7 +288,7 @@ namespace Propulsion {
 
         // Matrix Math Related Functions
         void add( const Matrix<type> &b, bool printTime = false);
-        void add( const Matrix<type> &&b, bool printTime = false);
+
 
         Matrix<type> addRowVector(Matrix<type> &b);
         Matrix<type> addRowVector(Matrix<type> &&b);
@@ -296,13 +296,13 @@ namespace Propulsion {
         Matrix<type> addColVector(Matrix<type> &&b);
 
         void subtract( const Matrix<type> &b);
-        void subtract( const Matrix<type> &&b);
         void cudaDotProduct(const Matrix<type> &b, bool printTime = false);
         void dot(const Matrix<type> &b, bool printTime = false);
         void schurProduct(const Matrix<type> &b, bool printTime = false);
         void multiply( type scalar);
         void strassenMultiplication(const Matrix<type> &b);
         void T();
+
 
         type getMax();
         type getMin();
@@ -329,8 +329,6 @@ namespace Propulsion {
         bool isIdentityMatrix();
         bool isSymmetric();
 
-
-
         // Get/merge Row/Col Matrix
         Matrix<type> getRowMatrix(unsigned row);
         Matrix<type> getColMatrix(unsigned col);
@@ -339,10 +337,10 @@ namespace Propulsion {
         Matrix<type> mergeBelow(Matrix<type> &b);
 
         // Access Functions
-        type& at(unsigned);
-        type& at(unsigned, unsigned);
-        type& operator()(unsigned);
-        type& operator()(unsigned ,unsigned );
+        type& at(unsigned i);
+        type& at(unsigned i, unsigned j);
+        type& operator()(unsigned i);
+        type& operator()(unsigned i ,unsigned j);
 
         // Operator Functions
         Matrix<type> operator+(Matrix<type> &rhs);
@@ -351,21 +349,12 @@ namespace Propulsion {
         Matrix<type> operator*(const Matrix<type> &rhs);
         Matrix<type>& operator=(const Matrix<type>  &rhs);
 
-
-
         // Functionality Functions
         void pad(unsigned rows, unsigned cols);
         void populateWithUniformDistribution(type lRange, type rRange);
         Matrix<type> removeRow(unsigned rowToRem);
         Matrix<type> removeCol(unsigned colToRem);
         static Matrix<type> copy(Matrix<type>);
-
-        void test();
-
-        // Numerical Operations.
-        static Matrix<type>* backwardSubstitution(Matrix<type> A, Matrix<type> y);
-
-        static Matrix<type> bisectionPoly(Matrix<type> A, type lRange, type rRange, double accuracy);
 
         static void randomRealDistribution(Matrix<type> &A, type lVal, type rVal);
         static void randomRealDistribution(std::shared_ptr<Matrix<type>> A, type lVal, type rVal);
@@ -391,7 +380,6 @@ namespace Propulsion {
     class Mandelbrot {
     private:
         std::unique_ptr< Propulsion::Matrix< int>> Mandel = nullptr;
-        std::unique_ptr< Propulsion::Matrix< int>> lastMandel = nullptr;
         std::unique_ptr< Propulsion::Matrix< unsigned>> epoch = nullptr;
         std::shared_ptr< Propulsion::Matrix< int>> colorPicker = nullptr;
 
@@ -425,7 +413,7 @@ namespace Propulsion {
         void zoomInOnCursor();
         void zoomOutOnCursor();
         void generateColorScheme(unsigned totalColors);
-        void generateColorSchemeV2(unsigned totalColors, Matrix<int> colors, Matrix<double> percentageBounds);
+        void generateColorSchemeV2(unsigned totalColors);
 
     public:
         /*
@@ -433,7 +421,7 @@ namespace Propulsion {
          * @param width Total size of horizontal pixels on window creation.
          * @param height Total size of height pixels on window creation.
          */
-        explicit Mandelbrot(unsigned width = 640, unsigned height = 480, double leftBound = -2.0, double rightBound = 2.0, double topBound = 2.0, double bottomBound = -2.0, double zoomFactor = .125);
+        explicit Mandelbrot(unsigned width = 640, unsigned height = 480, double leftBound = -2.0, double rightBound = 1.0, double topBound = 2.0, double bottomBound = -2.0, double zoomFactor = .125);
 
         void simulate();
 
@@ -828,7 +816,6 @@ namespace Propulsion {
 #include "MatrixNumerical.cu"
 #include "PropulsionVectorOperations.cu"        // Vector Operations
 #include "Propulsion.cu"                        // One Dimensional Matrix Operations
-#include "Propulsion2DMatrixArrayFunctions.cu"  //
 
 
 

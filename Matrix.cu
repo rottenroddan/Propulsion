@@ -331,33 +331,6 @@ void Propulsion::Matrix<type>::add(const Matrix<type>& b, bool printTime)
     }
 }
 
-template <typename type>
-void Propulsion::Matrix<type>::add(const Matrix<type>&& b, bool printTime)
-{
-    if(b.rows == this->rows && b.cols == this->cols)
-    {
-        auto temp = std::make_unique<type[]>(this->rows * this->cols);
-        // Use CUDA to speed up the process.
-        if(this->totalSize >= MATRIX_CUDA_ADD_DIFF_ELEM_SIZE)
-        {
-            cudaAdd1DArraysWithStride(this->M.get(), b.M.get(), temp.get(), this->rows * this->cols, printTime);
-            this->M = std::move(temp);
-        }
-            // Else just do it via HOST avx.
-        else
-        {
-            Propulsion::hostAdd1DArraysAVX256(this->getArray(), b.M.get(), temp.get(), this->totalSize, printTime);
-        }
-    }
-    else
-    {
-        std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  + ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")";
-        throw Propulsion::Matrix<type>::MatrixException(err.c_str(),
-                                                        __FILE__, __LINE__, "add" , "Addition Requires all dimension sizes to be the same as the operation is element wise.");
-    }
-}
-
-
 template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::addRowVector(Matrix<type> &b)
 {
@@ -1264,24 +1237,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::copy(Matrix<type> a)
         return b;
     }
 }
-template<typename type>
-void Propulsion::Matrix<type>::test()
-{
-    Propulsion::Matrix<type> a(this->M.get(), this->rows, this->cols);
-    Propulsion::Matrix<type> b(this->M.get(), this->rows, this->cols);
-    Propulsion::Matrix<type> c(this->M.get(), this->rows, this->cols);
-    Propulsion::Matrix<type> d(this->M.get(), this->rows, this->cols);
-    Propulsion::Matrix<type> tempOneSum(this-rows, this->cols);
 
-    Propulsion::Matrix<type> e(this->M.get(), this->rows, this->cols);
-    Propulsion::Matrix<type> f(this->M.get(), this->rows, this->cols);
-    Propulsion::Matrix<type> g(this->M.get(), this->rows, this->cols);
-    Propulsion::Matrix<type> h(this->M.get(), this->rows, this->cols);
-    Propulsion::Matrix<type> tempTwoSum(this-rows, this->cols);
-
-    auto p1 = std::async(cudaAdd1DArraysWithStride, a.M.get(), b.M.get(), tempOneSum.M.get(), this->rows*this->cols );
-
-}
 
 template<typename type>
 void Propulsion::Matrix<type>::randomRealDistribution(Matrix<type> &A, type lVal, type rVal)
@@ -1370,12 +1326,8 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::sumRows(Matrix<type> &A)
 template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::sumCols(Matrix<type> &&A)
 {
-    // create return object, give it size of the rows from A, 1 for columns.
-    Propulsion::Matrix<type> ret;
-    ret.rows = 1;
-    ret.cols = A.cols;
-    ret.totalSize = A.cols;
-    ret.M = std::make_unique<type[]>(ret.totalSize);
+    // create return object, give it size of the rows from A, 1 for rows.
+    Propulsion::Matrix<type> ret(1, A.cols);
 
     for(unsigned j = 0; j < A.cols; j++)
     {

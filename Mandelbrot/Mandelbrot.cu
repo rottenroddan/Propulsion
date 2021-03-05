@@ -43,9 +43,118 @@ Propulsion::Mandelbrot::Mandelbrot(unsigned int width, unsigned int height, doub
 }
 
 
-void Propulsion::Mandelbrot::generateColorSchemeV2(unsigned int totalColors, Matrix<int> colors, Matrix<double> percentageBounds)
+void Propulsion::Mandelbrot::generateColorSchemeV2(unsigned int totalColors)
 {
+    this->colorPicker = std::unique_ptr<Matrix<int>>(new Matrix<int>(1,totalColors));
 
+    int lastColor = 0x000000;
+
+    // Colors from 0% -> 1.0%     D.Purple  Purple    Blu/Purp
+    //std::vector<int> colorPalette{ 0x20006b, 0xd88aff, 0x4e00d6, 0x170099, 0x4f9bff, 0x00d6c1, 0x00d681, 0x17e300, 0xfffb00, 0xffdd00, 0xff8000, 0xff0800, 0xff5ca8, 0xe300d0, 0xbf19cf, 0x6d08cc, 0x140bb8, 0x0096ed, 0x00ede9, 0x0ecf7f, 0x0de00d, 0xffe208, 0xf56a00, 0xffffff};
+    //std::vector<double> percents {      0.0,     .005,     .010,    0.015,    0.020,    0.030,    0.040,    0.055,    0.080,    0.100,    0.125,    0.150,    0.165,     .180,    0.210,     .235,     0.25,    0.275,    0.300,    0.320,    0.332,    0.350,    0.370, 1.0};
+
+    std::vector<int> colorPalette{ 0x20006b, 0xd88aff, 0x4e00d6, 0x170099, 0x4f9bff, 0x00d6c1, 0x00d681, 0x17e300, 0xfffb00, 0xffdd00, 0xff8000, 0xff0800, 0xff5ca8, 0xe300d0, 0xbf19cf, 0x6d08cc, 0x140bb8, 0x0096ed, 0x00ede9, 0x0ecf7f, 0x0de00d, 0xffe208, 0xf56a00, 0xffabab, 0xffffff};
+    std::vector<double> percents {      0.0,     .005,     .010,    0.015,    0.020,    0.030,    0.040,    0.055,    0.080,    0.100,    0.125,    0.150,    0.190,     .210,    0.240,     .275,     0.31,    0.420,    0.470,    0.520,    0.560,    0.620,    0.720,    0.800,      1.0};
+
+
+    // For for loop condition initializer
+    double percentOfSuccess = 0.0;
+
+    unsigned currentColorItt = 0;
+
+    // For accessing percents vector, firstControl is ith index while
+    // second is i+1 index.
+    double firstControl;
+    double secondControl;
+
+    // Int for storing the colors from colorPalette.
+    int firstRed;
+    int firstGreen;
+    int firstBlue;
+
+    int secondRed;
+    int secondGreen;
+    int secondBlue;
+
+    for(unsigned i = 0; i < colorPalette.size() - 1; i++)
+    {
+        firstControl = percents[i];
+        secondControl = percents[i+1];
+
+        firstRed   = (int)((unsigned)colorPalette[i] >> 16);
+        firstGreen = (int)((unsigned)(colorPalette[i] << 16) >> 24);
+        firstBlue  = (int)((unsigned)(colorPalette[i] << 24) >> 24);
+
+        secondRed   = (int)((unsigned)colorPalette[i+1] >> 16);
+        secondGreen = (int)((unsigned)(colorPalette[i+1] << 16) >> 24);
+        secondBlue  = (int)((unsigned)(colorPalette[i+1] << 24) >> 24);
+
+        // Calculate the diff.
+        int redDiff = secondRed - firstRed;
+        int greenDiff = secondGreen - firstGreen;
+        int blueDiff = secondBlue - firstBlue;
+
+        // Unsigned values for storing calculated color.
+        int red;
+        int green;
+        int blue;
+        int finalColor;
+
+        if(i == 0)
+        {
+            std::cout << "Red: " << std::hex << (int)firstRed << std::endl;
+            std::cout << "Green: " << std::hex << (int)firstGreen << std::endl;
+            std::cout << "Blue: " << std::hex << (int)firstBlue << std::endl;
+        }
+
+        while(percentOfSuccess < secondControl)
+        {
+            // Check if the value is decreasing from red to less red.
+            /*
+            if(redDiff < 0)
+                red = (int) ( ( ( (1 - 0) * ( percentOfSuccess - secondControl) ) / (firstControl - secondControl) ) * ( std::abs(redDiff) ) + secondRed );
+            else
+                red = (int) (secondRed - (((1 - 0) * (percentOfSuccess - secondControl) ) / (firstControl - secondControl) ) * ( redDiff ) );
+
+            // Green now...
+            if(greenDiff < 0)
+                green = (int) ( ( ( (1 - 0) * ( percentOfSuccess - secondControl) ) / (firstControl - secondControl) ) * ( std::abs(greenDiff) ) + secondGreen );
+            else
+                green = (int) (secondGreen - (((1 - 0) * (percentOfSuccess - secondControl) ) / (firstControl - secondControl) ) * ( greenDiff ) );
+
+            // Lastly blue...
+            if(blueDiff < 0)
+                blue = (int) ( ( ( (1 - 0) * ( percentOfSuccess - secondControl) ) / (firstControl - secondControl) ) * ( std::abs(blueDiff) ) + secondBlue );
+            else
+                blue = (int) (secondBlue - (((1 - 0) * (percentOfSuccess - secondControl) ) / (firstControl - secondControl) ) * ( blueDiff ) );
+            */
+            if(redDiff < 0)
+                red = (int) ((percentOfSuccess - secondControl) / (firstControl - secondControl) * (std::abs(redDiff)) + secondRed);
+            else
+                red = (int) (secondRed - (percentOfSuccess - secondControl) / (firstControl - secondControl) * (std::abs(redDiff)));
+
+            if(greenDiff < 0)
+                green = (int) ((percentOfSuccess - secondControl) / (firstControl - secondControl) * (std::abs(greenDiff)) + secondGreen);
+            else
+                green = (int) (secondGreen - (percentOfSuccess - secondControl) / (firstControl - secondControl) * (std::abs(greenDiff)));
+
+            if(blueDiff < 0)
+                blue = (int) ((percentOfSuccess - secondControl) / (firstControl - secondControl) * (std::abs(blueDiff)) + secondBlue);
+            else
+                blue = (int) (secondBlue - (percentOfSuccess - secondControl) / (firstControl - secondControl) * (std::abs(blueDiff)));
+
+            finalColor = 0x000000;
+            finalColor += red << 16;
+            finalColor += green << 8;
+            finalColor += blue;
+            this->colorPicker->at(currentColorItt) = finalColor;
+
+            currentColorItt++;
+            percentOfSuccess =  (double)currentColorItt / (double)totalColors;
+        }
+    }
+
+    this->colorPicker->at(totalColors-1) = lastColor;
 }
 
 
@@ -483,7 +592,7 @@ void Propulsion::Mandelbrot::paintWindow()
 
 
             // Generate new color scheme as iterations have gone up!
-            generateColorScheme(this->iterations);
+            generateColorSchemeV2(this->iterations);
 
             /*
             int colorArray[] = {};
@@ -710,7 +819,6 @@ void Propulsion::Mandelbrot::simulate()
     // Event loop
     MSG msg;
 
-    POINT p;
     bool lookingForInput = true;
 
     while (GetMessage( &msg, NULL, 0, 0 ) > 0)
@@ -726,10 +834,6 @@ void Propulsion::Mandelbrot::simulate()
                 std::cout << "Setting Iterations to: " << this->epoch->at(this->currentEpochSelection)<< std::endl;
                 this->redraw = true;
                 this->iterations = this->epoch->at(this->currentEpochSelection);
-
-                std::cout << "More stats: " << std::endl
-                        <<   "Iterations: " << this->iterations << std::endl
-                        <<   "Selection:  " << this->currentEpochSelection - 1 << std::endl;
 
                 lookingForInput = false;
             }
@@ -843,7 +947,7 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
             if(n == maxIterations)
             {
                 // Set to Black
-                Mandelset->at(i,j) = 0x000000;
+                Mandelset->at(i,j) = colorPicker->at(n-1);
             }
             else
             {
@@ -1016,14 +1120,7 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
                     n += 1;
                 }
 
-                // find out
-                if (n == maxIterations) {
-                    // Set to Black
-                    Mandelset->at(i, j2) = 0x000000;
-                } else {
-                    // Set to White
-                    Mandelset->at(i, j2) = colorPicker->at(n);
-                }
+                Mandelset->at(i, j2) = colorPicker->at(n);
             }
         }
     }
@@ -1186,40 +1283,40 @@ void Propulsion::Mandelbrot::zoomOutOnCursor()
     // Firstly, we ned to find cursor position.
     POINT cursor;
 
-    // Get the cursor position on screen.
     if(GetCursorPos(&cursor)) {
-        // Now that we have position, check if the client area is not negative.
-        // Which means we're in a proper region.
-        if (cursor.x >= 0 && cursor.y >= 0) {
-            // Get x-range and y-range of current window.
-            double xRange = this->rightBound - this->leftBound;
-            double yRange = this->topBound - this->bottomBound;
+        // Get the cursor position on screen.
+        if (ScreenToClient(this->hwnd, &cursor)) {
+            // Now that we have position, check if the client area is not negative.
+            // Which means we're in a proper region.
+            if (cursor.x >= 0 && cursor.y >= 0) {
+                // Get x-range and y-range of current window.
+                double xRange = this->rightBound - this->leftBound;
+                double yRange = this->topBound - this->bottomBound;
 
-            // Get graph x and y positions on screen from cursor information.
-            double xPos = (double)this->leftBound + (xRange) * ((double) cursor.x / (double)this->clientWidthPixels);
-            double yPos = (double)this->bottomBound + (yRange) * (1.0 - (double) cursor.y / (double)this->clientHeightPixels);
-
-
-            //
-            double newXRange = (xRange + xRange * this->zoomFactor) / 2;
-            double newYRange = (yRange + yRange * this->zoomFactor) / 2;
+                // Get graph x and y positions on screen from cursor information.
+                double xPos =(double) this->leftBound + (xRange) * ((double) cursor.x / (double) this->clientWidthPixels);
+                double yPos = (double) this->bottomBound +(yRange) * (1.0 - (double) cursor.y / (double) this->clientHeightPixels);
 
 
-            // Now calculate and set new bounds!
-            this->leftBound = xPos - newXRange;
-            this->rightBound = xPos + newXRange;
-            this->bottomBound = yPos - newYRange;
-            this->topBound = yPos + newYRange;
+                // Get new Ranges
+                double newXRange = (xRange + xRange * this->zoomFactor) / 2;
+                double newYRange = (yRange + yRange * this->zoomFactor) / 2;
 
 
-            // Change to zoomed, that way a recalculation is performed!
-            this->redraw = true;
+                // Now calculate and set new bounds!
+                this->leftBound = xPos - newXRange;
+                this->rightBound = xPos + newXRange;
+                this->bottomBound = yPos - newYRange;
+                this->topBound = yPos + newYRange;
+
+
+                // Change to zoomed, that way a recalculation is performed!
+                this->redraw = true;
+            } else {
+                std::cout << "Can't zoom out on nothing" << std::endl;
+            }
         } else {
-            std::cout << "Can't zoom out on nothing" << std::endl;
+            // Interesting...
         }
-    }
-    else
-    {
-        // Interesting...
     }
 }

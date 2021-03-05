@@ -13,7 +13,6 @@ CMakeFiles\Propulsion.dir\main.cu.obj: ..\Matrix.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\MatrixNumerical.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Propulsion.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Propulsion.cuh
-CMakeFiles\Propulsion.dir\main.cu.obj: ..\Propulsion2DMatrixArrayFunctions.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\PropulsionVectorOperations.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\main.cu
 
