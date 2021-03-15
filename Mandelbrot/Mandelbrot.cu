@@ -14,9 +14,14 @@
 
 bool activeApp = false;
 
-unsigned ITER_STEPS[] = {125, 125, 250, 250, 500, 500, 1000, 1000, 1500, 1500, 2000, 2000, 5000, 5000, 10000, 10000, 20000, 20000, 50000, 50000, 100000,100000, 200000, 200000, 500000, 500000, 1000000, 1000000};
-unsigned STEP_SIZE = 28;
 
+// CONST arrays for
+const char* DEVICE_LIST_STR[] = {"CPU Naive Single Threaded", "AVX Single Threaded", "AVX 8 Threads", "AVX 16 Threads" , "CUDA Kernel"};
+const int DEVICE_LIST[] = {0, 1, 2, 3, 4};
+const unsigned DEVICES = sizeof(DEVICE_LIST)/sizeof(int);
+
+unsigned ITER_STEPS[] = {125, 250, 500, 1000, 1500, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000};
+unsigned STEP_SIZE = sizeof(ITER_STEPS)/sizeof(unsigned);
 
 std::mutex mutexPainting;
 std::atomic<bool> windowDestroyed;
@@ -99,13 +104,6 @@ void Propulsion::Mandelbrot::generateColorSchemeV2(unsigned int totalColors)
         int green;
         int blue;
         int finalColor;
-
-        if(i == 0)
-        {
-            std::cout << "Red: " << std::hex << (int)firstRed << std::endl;
-            std::cout << "Green: " << std::hex << (int)firstGreen << std::endl;
-            std::cout << "Blue: " << std::hex << (int)firstBlue << std::endl;
-        }
 
         while(percentOfSuccess < secondControl)
         {
@@ -551,7 +549,7 @@ void Propulsion::Mandelbrot::generateColorScheme(unsigned totalColors)
 
 }
 
-void Propulsion::Mandelbrot::paintWindow()
+void Propulsion::Mandelbrot::paintWindow(int device)
 {
     //mutexPainting.lock();
 
@@ -602,26 +600,50 @@ void Propulsion::Mandelbrot::paintWindow()
             generateColorSchemeV2(this->iterations, colors, colorPercentageBounds);*/
 
             // Calculate Mandel
-            /*
-            this->Mandel = calculateMandelSingleThreaded(this->clientWidthPixels, this->clientHeightPixels,
-                                                         this->leftBound, this->rightBound, this->topBound,
-                                                         this->bottomBound, this->iterations,
-                                                         this->colorPicker);
-            /*
-            this->Mandel = calculateMandelAVX256(this->clientWidthPixels, this->clientHeightPixels,
+
+
+
+            // If user specified naive CPU?
+            if(device == 0)
+            {
+                this->Mandel = calculateMandelSingleThreaded(this->clientWidthPixels, this->clientHeightPixels,
+                                                             this->leftBound, this->rightBound, this->topBound,
+                                                             this->bottomBound, this->iterations,
+                                                             this->colorPicker);
+            }
+            // Else AVX?
+            else if(device == 1)
+            {
+                this->Mandel = calculateMandelAVX256(this->clientWidthPixels, this->clientHeightPixels,
                                                  this->leftBound, this->rightBound, this->topBound,
-                                                 this->bottomBound, this->iterations,this->colorPicker);*/
+                                                 this->bottomBound, this->iterations,this->colorPicker);
+            }
+            // Else it has to be Mandelbrot with 8 Threads AVX!
+            else if(device == 2)
+            {
+                this->Mandel = calculateMandelMultiThreaded(8,this->clientWidthPixels, this->clientHeightPixels,
+                                                            this->leftBound, this->rightBound, this->topBound,
+                                                            this->bottomBound, this->iterations,this->colorPicker);
+            }
+            // This man wants 16 threads with AVX, probably won't work in our favor as its 16 threads on 8 cores...
+            // but I'm sure there will be some gainz.
+            else if (device == 3)
+            {
+                this->Mandel = calculateMandelMultiThreaded(16,this->clientWidthPixels, this->clientHeightPixels,
+                                                            this->leftBound, this->rightBound, this->topBound,
+                                                            this->bottomBound, this->iterations,this->colorPicker);
+            }
+            // Else CUDA!
+            else
+            {
+                this->Mandel = calculateMandelCUDA(this->clientWidthPixels, this->clientHeightPixels,
+                                                   this->leftBound, this->rightBound, this->topBound,
+                                                   this->bottomBound, this->iterations, this->colorPicker);
+            }
 
 
-            this->Mandel = calculateMandelCUDA(this->clientWidthPixels, this->clientHeightPixels,
-                                               this->leftBound, this->rightBound, this->topBound,
-                                               this->bottomBound, this->iterations,this->colorPicker);
 
 
-            /*
-            this->Mandel = calculateMandelMultiThreaded(16,this->clientWidthPixels, this->clientHeightPixels,
-                                               this->leftBound, this->rightBound, this->topBound,
-                                               this->bottomBound, this->iterations,this->colorPicker); */
 
 
 
@@ -637,7 +659,7 @@ void Propulsion::Mandelbrot::paintWindow()
             this->redraw = false;
         }
 
-        if(Mandel->getColSize() != clientRect.right || Mandel->getRowSize() != clientRect.bottom)
+        if(this->Mandel->getColSize() != clientRect.right || Mandel->getRowSize() != clientRect.bottom)
         {
             std::cout << "You should never see this!" << std::endl;
         }
@@ -646,12 +668,9 @@ void Propulsion::Mandelbrot::paintWindow()
 
         // Get Device Context handle.
         PAINTSTRUCT ps;
+
         //HDC hdc = GetDC(this->hwnd);
         HDC hdc = BeginPaint(this->hwnd, &ps);
-
-
-
-        //std::cout << clientRect.top << " + " << clientRect.bottom << " : " << clientRect.left << "+" <<  clientRect.right << std::endl;
 
         // Create bitmap that way we can draw all at once instead of setpixel.
         HBITMAP map = CreateBitmap(this->clientWidthPixels, this->clientHeightPixels, 1, 8*4, (void*) Mandel->getArray());
@@ -689,7 +708,7 @@ void Propulsion::Mandelbrot::paintWindow()
         */
 
         // Release the hdc
-        EndPaint(hwnd, &ps);
+        EndPaint(this->hwnd, &ps);
 
         DeleteObject(map);
         DeleteDC(src);
@@ -769,7 +788,6 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 void Propulsion::Mandelbrot::simulate()
 {
     // Register window class
-
     this->windowClass = new WNDCLASSA
     {
         0, WndProc, 0, 0, 0,
@@ -780,6 +798,7 @@ void Propulsion::Mandelbrot::simulate()
         "Mandelbrot"
     };
 
+    // Create window ATOM.
     ATOM wClass = RegisterClassA( this->windowClass );
     if (!wClass)
     {
@@ -792,13 +811,15 @@ void Propulsion::Mandelbrot::simulate()
             MAKEINTATOM( wClass ),
             "Mandelbrot",     // window title
             WS_OVERLAPPEDWINDOW, // title bar, thick borders, etc.
-            CW_USEDEFAULT, CW_USEDEFAULT, 640, 480,
+            CW_USEDEFAULT, CW_USEDEFAULT, this->windowWidthPixels, this->windowHeightPixels,
             NULL, // no parent window
             NULL, // no menu
             GetModuleHandle( NULL ),  // EXE's HINSTANCE
             NULL  // no magic user data
     );
-    if (!hwnd)
+
+    // Check if window creation failed.
+    if (!this->hwnd)
     {
         fprintf( stderr, "%ld\n", GetLastError() );
         fprintf( stderr, "%s\n", "Failed to create Window" );
@@ -806,10 +827,11 @@ void Propulsion::Mandelbrot::simulate()
     }
 
     // Make window visible
-    ShowWindow( hwnd, SW_SHOWNORMAL );
+    ShowWindow( this->hwnd, SW_SHOWNORMAL );
 
-    // set window destroyed to false!
+    // Set window destroyed to false!
     windowDestroyed = false;
+
 
 
     // Start clock for mandel calculation
@@ -819,52 +841,101 @@ void Propulsion::Mandelbrot::simulate()
     // Event loop
     MSG msg;
 
-    bool lookingForInput = true;
+    bool pKeyWasReleased = true;
+    bool lKeyWasReleased = true;
+    bool qKeyWasReleased = true;
+    bool eKeyWasReleased = true;
+    bool tKeyWasReleased = true;
 
+    int dIter = 0;
+
+    /*
+     * Main loop for the window handle and interpreting the actions of keys pressed to
+     * modify the Mandelbrot set based on those inputs
+     *
+     *  Keys:
+     *  @Q - Press 'Q' to Increase Iterations per pixel
+     *  @E - Press 'E' to Decrease Iterations per pixel
+     *  @P - Change Calculation Method towards more efficient means.
+     *  @L - Change Calculation Method towards less efficient means.
+     */
     while (GetMessage( &msg, NULL, 0, 0 ) > 0)
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
 
-        // If Q button is pressed, do something special!
-        if (GetKeyState('Q') & 0x8000 && GetActiveWindow() == hwnd && lookingForInput) {
-            if(this->currentEpochSelection < this->epoch->getColSize() - 1)
-            {
-                currentEpochSelection++;
-                std::cout << "Setting Iterations to: " << this->epoch->at(this->currentEpochSelection)<< std::endl;
-                this->redraw = true;
-                this->iterations = this->epoch->at(this->currentEpochSelection);
-
-                lookingForInput = false;
-            }
+        // If Q button is pressed, increase amount of iterations per pixel.
+        if (GetKeyState('Q') & 0x8000 && GetActiveWindow() == hwnd && this->currentEpochSelection < this->epoch->getColSize() - 1 && qKeyWasReleased) {
+            currentEpochSelection++;
+            std::cout << "Setting Iterations to: " << this->epoch->at(this->currentEpochSelection)<< std::endl;
+            this->redraw = true;
+            this->iterations = this->epoch->at(this->currentEpochSelection);
+            qKeyWasReleased = false;
         }
-        else if(GetKeyState('E') & 0x8000 && GetActiveWindow() == hwnd && lookingForInput) {
-            if(this->currentEpochSelection > 0)
-            {
-                currentEpochSelection--;
-                std::cout << "Setting Iterations to: " << this->epoch->at(this->currentEpochSelection)<< std::endl;
-                this->redraw = true;
-                this->iterations = this->epoch->at(this->currentEpochSelection);
-
-                lookingForInput = false;
-            }
-
+        // If E key is pressed, decrease amount of iterations per pixel.
+        else if(GetKeyState('E') & 0x8000 && GetActiveWindow() == hwnd && this->currentEpochSelection > 0 && eKeyWasReleased) {
+            currentEpochSelection--;
+            std::cout << "Setting Iterations to: " << this->epoch->at(this->currentEpochSelection)<< std::endl;
+            this->redraw = true;
+            this->iterations = this->epoch->at(this->currentEpochSelection);
+            eKeyWasReleased = false;
         }
-        else if(GetKeyState('T') & 0x8000 && GetActiveWindow() == hwnd && lookingForInput) {
+        else if(GetKeyState('T') & 0x8000 && GetActiveWindow() == hwnd && tKeyWasReleased) {
             unsigned desiredIterations;
             std::cout << "Enter Desired Iterations here: ";
             std::cin >> desiredIterations;
             if(desiredIterations != 0) {
                 this->redraw = true;
                 this->iterations = desiredIterations;
-
-                std::cout << "More stats: " << std::endl
-                          << "Iterations: " << this->iterations << std::endl;
             }
             else
             {
                 std::cout << "User Provided zero as input, just ignore." << std::endl;
             }
+
+            tKeyWasReleased = false;
+        }
+        else if(GetKeyState('P') & 0x8000 && GetActiveWindow() == hwnd && pKeyWasReleased && (dIter < DEVICES - 1))
+        {
+            // Increment device iterator. Set class to draw on next frame, and set this key to pressed.
+            dIter++;
+            this->redraw = true;
+            pKeyWasReleased = false;
+
+            // Notify user of change in calculation methods.
+            std::cout << "Mandel: Changed Calculation Method to: " << DEVICE_LIST_STR[dIter] << std::endl;
+        }
+        else if(GetKeyState('L') & 0x8000 && GetActiveWindow() == hwnd && lKeyWasReleased && (dIter > 0))
+        {
+            // Decrement device iterator. Set class to draw on next frame, and set this key to pressed.
+            dIter--;
+            this->redraw = true;
+            lKeyWasReleased = false;
+
+            // Notify user of change in calculation methods.
+            std::cout << "Mandel: Changed Calculation Method to: " << DEVICE_LIST_STR[dIter] << std::endl;
+        }
+
+        // Check if any of these keys are released!
+        if(GetAsyncKeyState('P') == 0)
+        {
+            pKeyWasReleased = true;
+        }
+        if(GetAsyncKeyState('L') == 0)
+        {
+            lKeyWasReleased = true;
+        }
+        if(GetAsyncKeyState('Q') == 0)
+        {
+            qKeyWasReleased = true;
+        }
+        if(GetAsyncKeyState('E') == 0)
+        {
+            eKeyWasReleased = true;
+        }
+        if(GetAsyncKeyState('T') == 0)
+        {
+            tKeyWasReleased = true;
         }
 
         // Check if we can draw at 100FPS.
@@ -874,8 +945,7 @@ void Propulsion::Mandelbrot::simulate()
 
                 }
             else {
-                paintWindow();
-                lookingForInput = true;
+                paintWindow(DEVICE_LIST[dIter]);
             }
             // Reset timer from last frame!
             start = std::chrono::high_resolution_clock::now();
@@ -974,7 +1044,7 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
 }
 
 
-std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandelAVX256(unsigned int wPixels, unsigned int hPixels, double leftBound, double rightBound, double topBound, double bottomBound, unsigned maxIterations, std::shared_ptr< Propulsion::Matrix< int>> colorPicker)
+std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandelAVX256(unsigned int wPixels, unsigned int hPixels, double leftBound, double rightBound, double topBound, double bottomBound, unsigned maxIterations, std::shared_ptr< Propulsion::Matrix< int>> colorPicker, bool printTime)
 {
     // Start clock for mandel calculation
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
@@ -1125,13 +1195,14 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
         }
     }
 
-    std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-    float milliseconds = (float) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000;
+    if(printTime) {
+        std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+        float milliseconds = (float) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000;
 
-    std::cout << std::left << std::setw(TIME_FORMAT) << " HOST:  Mandel Calculate Time: " <<
-              std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
-              " ms." <<  std::endl;
-
+        std::cout << std::left << std::setw(TIME_FORMAT) << " HOST:  Mandel Calculate Time: " <<
+                  std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
+                  " ms." << std::endl;
+    }
     return Mandelset;
 }
 
@@ -1203,7 +1274,6 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
         if(it == mandelPromises.begin())
         {
             Mandelset = std::move(it->get());
-            std::cout << Mandelset->getRowSize() << " : " << Mandelset->getColSize() << std::endl;
         }
         else
         {

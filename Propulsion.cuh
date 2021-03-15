@@ -48,6 +48,7 @@
 #include <future>       // promises, futures
 #include <thread>       // Multithreading.
 #include <list>
+#include <deque>
 
 
 #include <windows.h>
@@ -75,7 +76,7 @@
 #define MATRIX_CUDA_STRASSEN_LEAF_SIZE 2048
 // threshold where a 9900k starts to lose to the 2080ti.
 #define MATRIX_CUDA_ADD_DIFF_ELEM_SIZE 200000
-#define MATRIX_CUDA_DOT_ELEM_SIZE 100000
+#define MATRIX_CUDA_DOT_ELEM_SIZE 128
 #define MATRIX_COPY_SIZE_DIFF 2000000
 
 namespace Propulsion {
@@ -158,7 +159,11 @@ namespace Propulsion {
          *
          * Purpose:         Constructor to deep copy another Matrix. 
          */
-        Matrix(const Matrix&);
+        Matrix(const Matrix& copyM);
+
+
+
+        Matrix(Matrix&&);
 
         /*
          * Function:    Matrix(unsigned rowsAndColSize, MatrixInitVal mit, type customVal, MatrixInitType miv)
@@ -258,7 +263,7 @@ namespace Propulsion {
          * &returns:    &void
          * Author:      Steven Roddan on 8/4/2020.
          */
-        void print();
+        void print(std::ostream& oStream = std::cout);
 
         /*
          * Method:      print(type *array, unsigned rows, unsigned cols)
@@ -376,6 +381,9 @@ namespace Propulsion {
         static Propulsion::Matrix<type> recursiveStrassen(Matrix<type> A, Matrix<type> B);
     };
 
+    template<typename type>
+    class Tensor;
+
 
     class Mandelbrot {
     private:
@@ -409,7 +417,7 @@ namespace Propulsion {
 
         std::mutex mandelMutex;
 
-        void paintWindow();
+        void paintWindow(int device = 0);
         void zoomInOnCursor();
         void zoomOutOnCursor();
         void generateColorScheme(unsigned totalColors);
@@ -432,7 +440,7 @@ namespace Propulsion {
                                                                                       unsigned maxIterations,std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
         std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelAVX256(unsigned wPixels, unsigned hPixels, double leftBound,
                                                                                       double rightBound, double topBound, double bottomBound,
-                                                                                      unsigned maxIterations,std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
+                                                                                      unsigned maxIterations,std::shared_ptr< Propulsion::Matrix< int>> colorPicker, bool printTime = false);
         std::unique_ptr<Propulsion::Matrix<int>> static calculateMandelMultiThreaded(unsigned threads, unsigned wPixels, unsigned hPixels, double leftBound, double rightBound,
                                                                             double topBound, double bottomBound, unsigned maxIterations,
                                                                             std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
@@ -803,7 +811,7 @@ namespace Propulsion {
 
 };
 
-
+#include "Tensor.cuh"
 #include "ANN/ArtificialNeuralNetwork.cu"
 #include "ANN/ActivationReLU.cu"
 #include "ANN/ActivationSigmoid.cu"
@@ -816,6 +824,7 @@ namespace Propulsion {
 #include "MatrixNumerical.cu"
 #include "PropulsionVectorOperations.cu"        // Vector Operations
 #include "Propulsion.cu"                        // One Dimensional Matrix Operations
+
 
 
 

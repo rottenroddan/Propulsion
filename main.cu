@@ -5,7 +5,6 @@
 
 #include <string>
 #include "Propulsion.cuh"
-#include <windows.system.h>
 #include "cuda_runtime.h"
 #include "cublas.h"
 #include "device_launch_parameters.h"
@@ -891,7 +890,7 @@ void matrixMultiplicationTests()
     std::chrono::high_resolution_clock::time_point end;
 
     // square matrix sizes to test speeds on
-    unsigned SZ[] = {128, 256, 512, 1024, 2048, 4096, 8192, 16384};
+    unsigned SZ[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384};
 
 
     double cpuTimes[sizeof(SZ)];
@@ -980,6 +979,94 @@ void matrixMultiplicationTests()
 
 }
 
+void tensorTests()
+{
+    // Test Constructor.
+    Propulsion::Tensor<int> Tens(6, 3, 4,4);
+    // Test for dim checks, dim size etc.
+    Propulsion::Tensor<int> p(4, 3, 3 ,4, 4);
+    // Test for accessing
+    Propulsion::Tensor<int> T(2, 2, 3, 3);
+    // Test for Addition/Difference
+    Propulsion::Tensor<int> addSubA(1, 3, 4, 4);
+    Propulsion::Tensor<int> addSubB(1, 3, 4, 4);
+    Propulsion::Tensor<int> addSubC(1, 3, 4, 4);
+
+    p(0, 0, 0,3,3) = 10;
+    p(0, 0, 1,3,3) = 10;
+    p(0, 0, 2,3,3) = 10;
+    p(3, 2, 2, 3, 3) = 6;
+
+    T(0, 0, 0, 0) = 12;
+    T(1, 0, 0, 0) = 13;
+    T.print();
+
+    /*
+     * Exception Tests for at(...args) method.
+     * -Test All Elements are accessible first
+     */
+    try {
+        int temp = T.at(0, 0, 0, 0);
+        printExceptionTestResults("(Tensor.at should not throw an exception)", true, __FILE__, __LINE__);
+    } catch (Propulsion::Tensor<int>::TensorException &e) {
+        printExceptionTestResults(std::string("(Tensor.at should not throw an exception)->") + e.what(), false, __FILE__, __LINE__);
+    }
+    try {
+        int temp = T.at(10, 0, 0, 0);
+        printExceptionTestResults("(Tensor.at should have thrown an exception)", false, __FILE__, __LINE__);
+    }
+    catch (Propulsion::Tensor<int>::TensorException &e) {
+        printExceptionTestResults(std::string("(Tensor.at threw an exception)->") + e.what(), true, __FILE__, __LINE__);
+    }
+
+    /*
+     * Check that getTotalDims is functional.
+     */
+    if(p.getTotalDims() == 5) {
+        printExceptionTestResults("P should have 5 Dimensions: " + std::to_string( p.getTotalDims()), true, __FILE__, __LINE__);
+    }
+    else
+    {
+        printExceptionTestResults("P should have 5 Dimensions: " + std::to_string( p.getTotalDims()), false, __FILE__, __LINE__);
+    }
+
+    /*
+     * Check that getDims returns a deque/std container.
+     */
+    if(p.getDims()[1] == 3) {
+        printExceptionTestResults("(P Dim[1] should equal 3: " + std::to_string(p.getDims()[1]) + ")", true, __FILE__,
+                                  __LINE__);
+    }
+    else
+    {
+        printExceptionTestResults("(P Dim[1] should equal 3: " + std::to_string(p.getDims()[1])+ ")", false, __FILE__,
+                                  __LINE__);
+    }
+
+    /*
+     * Check that dimension match on same Tensor(obv)
+     */
+    if(p.checkAllDimensionsMatch(p))
+    {
+        printExceptionTestResults("(P Dims should match itself)", true, __FILE__, __LINE__);
+    }
+    else
+    {
+        printExceptionTestResults("(P Dims should match itself)", false, __FILE__, __LINE__);
+    }
+
+    /*
+     * Test Random generation
+     */
+    addSubA.populateWithRandomRealDistribution(-6, 6);
+    addSubB.populateWithRandomRealDistribution(-6, 6);
+    addSubA.print();
+    addSubB.print();
+
+    addSubA.add(addSubB);
+    addSubA.print();
+}
+
 void aiClassifier()
 {
     auto A = Propulsion::ArtificialNeuralNetwork();
@@ -1011,9 +1098,9 @@ int main()
     secondMatrixTests();
 
 
-
+    /*
     Propulsion::Mandelbrot M(640,480);
-    M.simulate();
+    M.simulate();*/
 
     /*
     Propulsion::Matrix<double> R(1000,1000);
@@ -1026,6 +1113,7 @@ int main()
         std::cout << "Wow" << std::endl;
     }*/
 
+    tensorTests();
     matrixMultiplicationTests();
 
 

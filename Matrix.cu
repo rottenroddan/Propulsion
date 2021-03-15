@@ -1,7 +1,6 @@
 //
 // Created by steve on 7/31/2020.
 //
-
 #include "Propulsion.cuh"
 
 template<typename type>
@@ -79,6 +78,16 @@ Propulsion::Matrix<type>::Matrix(const Matrix<type>& copyM)
     }
 }
 
+template<typename type>
+Propulsion::Matrix<type>::Matrix(Matrix<type>&& copyM)
+{
+    this->rows = copyM.rows;
+    this->cols = copyM.cols;
+    this->totalSize = copyM.totalSize;
+    this->M = std::move(copyM.M);
+}
+
+
 
 template<typename type>
 Propulsion::Matrix<type>::Matrix(unsigned rowAndColSize, MatrixInitVal miv, type customVal, MatrixInitType mit )
@@ -136,7 +145,7 @@ Propulsion::Matrix<type>::~Matrix()
 }
 
 template<typename type>
-void Propulsion::Matrix<type>::print()
+void Propulsion::Matrix<type>::print(std::ostream& ostream)
 {
     unsigned spaceCount = 0;
     std::string digitStr;
@@ -153,12 +162,12 @@ void Propulsion::Matrix<type>::print()
 
     for(unsigned i = 0; i < rows; i++)
     {
-        std::cout << "|";
+        ostream << "|";
         for(unsigned j = 0; j < cols; j++)
         {
-            std::cout << std::setw(spaceCount + 2) << M[i*cols + j];
+            ostream << std::setw(spaceCount + 2) << M[i*cols + j];
         }
-        std::cout << " |" << std::endl;
+        ostream << " |" << std::endl;
     }
 }
 
@@ -702,7 +711,9 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::recursiveStrassen(Propulsion:
     // once we get to a manageable size.
     if(A.totalSize <= HOST_STRASSEN_LEAF_SIZE)
     {
-        return A * B;
+        Propulsion::Matrix<type> ret = A;
+        ret.dot(B);
+        return ret;
     }
 
     // get range matrices for a,b,c,d,e,f,g and h for strassen multiplication. You know you know.
@@ -1074,15 +1085,14 @@ template <typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::operator*(const Matrix<type> &rhs) {
     Propulsion::Matrix<type> ret = *this;    // Copy the contents of this to the return value.
 
-    // Choose whether we use regular multiplication or strassen multiplication.
-    if (ret.totalSize <= HOST_STRASSEN_LEAF_SIZE*HOST_STRASSEN_LEAF_SIZE)
+
+    if(ret.totalSize < MATRIX_CUDA_DOT_ELEM_SIZE)
     {
         ret.dot(rhs);      // Use already defined object method to dot by the right hand side matrix.
     }
     else
     {
-        // Use Strassen to create seven threads to solve.
-        ret.strassenMultiplication(rhs);
+        ret.cudaDotProduct(rhs);
     }
 
     return ret;

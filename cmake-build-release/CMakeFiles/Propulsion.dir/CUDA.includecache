@@ -99,6 +99,8 @@ thread
 -
 list
 -
+deque
+-
 windows.h
 -
 gdiplus.h
@@ -107,6 +109,8 @@ cuda_runtime.h
 C:/Users/steve/CLionProjects/Propulsion/cuda_runtime.h
 device_launch_parameters.h
 C:/Users/steve/CLionProjects/Propulsion/device_launch_parameters.h
+Tensor.cuh
+C:/Users/steve/CLionProjects/Propulsion/Tensor.cuh
 ANN/ArtificialNeuralNetwork.cu
 C:/Users/steve/CLionProjects/Propulsion/ANN/ArtificialNeuralNetwork.cu
 ANN/ActivationReLU.cu
@@ -136,6 +140,10 @@ C:/Users/steve/CLionProjects/Propulsion/PropulsionVectorOperations.cu
 Propulsion.cuh
 C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
 
+C:/Users/steve/CLionProjects/Propulsion/Tensor.cuh
+Propulsion.cuh
+C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
+
 C:/Users/steve/CLionProjects/Propulsion/main.cu
 chrono
 -
@@ -149,8 +157,6 @@ string
 -
 Propulsion.cuh
 C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
-windows.system.h
--
 cuda_runtime.h
 C:/Users/steve/CLionProjects/Propulsion/cuda_runtime.h
 cublas.h
