@@ -28,6 +28,7 @@
 #include <cmath>        // floor, ceil.
 #include <numeric>
 #include <exception>    // Exception handling.
+#include <assert.h>     // assert
 
 #include <immintrin.h>  // AVX256
 #include <smmintrin.h>
@@ -78,6 +79,26 @@
 #define MATRIX_CUDA_ADD_DIFF_ELEM_SIZE 200000
 #define MATRIX_CUDA_DOT_ELEM_SIZE 128
 #define MATRIX_COPY_SIZE_DIFF 2000000
+
+
+
+
+
+/*
+ * Nice Wrapper function provided by:
+ * https://stackoverflow.com/questions/14038589/what-is-the-canonical-way-to-check-for-errors-using-the-cuda-runtime-api
+ */
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+    if (code != cudaSuccess)
+    {
+        fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+        if (abort) exit(code);
+    }
+}
+
+
 
 namespace Propulsion {
 
@@ -294,13 +315,12 @@ namespace Propulsion {
         // Matrix Math Related Functions
         void add( const Matrix<type> &b, bool printTime = false);
 
-
         Matrix<type> addRowVector(Matrix<type> &b);
         Matrix<type> addRowVector(Matrix<type> &&b);
         Matrix<type> addColVector(Matrix<type> &b);
         Matrix<type> addColVector(Matrix<type> &&b);
 
-        void subtract( const Matrix<type> &b);
+        void subtract( const Matrix<type> &b, bool printTime = false);
         void cudaDotProduct(const Matrix<type> &b, bool printTime = false);
         void dot(const Matrix<type> &b, bool printTime = false);
         void schurProduct(const Matrix<type> &b, bool printTime = false);

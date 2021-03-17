@@ -5,19 +5,7 @@
 #include "Propulsion.cuh"
 
 
-/*
- * Nice Wrapper function provided by:
- * https://stackoverflow.com/questions/14038589/what-is-the-canonical-way-to-check-for-errors-using-the-cuda-runtime-api
- */
-#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
-{
-    if (code != cudaSuccess)
-    {
-        fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-        if (abort) exit(code);
-    }
-}
+
 
 
 __global__ void deviceHelloWorld()
@@ -73,7 +61,6 @@ void Propulsion::cudaAdd1DArrays(type *a, type *b, type *c, unsigned cols, bool 
     int block = cols / (MAX_THREADS) + 1;
 
     gpuErrchk(cudaEventRecord(start));
-    // Start kernel if < 65536
     deviceAdd1DMatrices<<<block,MAX_THREADS>>>(dev_a, dev_b, dev_c, cols);
 
     gpuErrchk(cudaPeekAtLastError());

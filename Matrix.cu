@@ -323,14 +323,15 @@ void Propulsion::Matrix<type>::add(const Matrix<type>& b, bool printTime)
         // Use CUDA to speed up the process.
         if(this->totalSize >= MATRIX_CUDA_ADD_DIFF_ELEM_SIZE)
         {
-            cudaAdd1DArraysWithStride(this->M.get(), b.M.get(), temp.get(), this->rows * this->cols, printTime);
-            this->M = std::move(temp);
+            cudaAdd1DArraysWithStride(this->getArray(), b.M.get(), temp.get(), this->totalSize, printTime);
         }
         // Else just do it via HOST avx.
         else
         {
             Propulsion::hostAdd1DArraysAVX256(this->getArray(), b.M.get(), temp.get(), this->totalSize, printTime);
         }
+
+        this->M = std::move(temp);
     }
     else
     {
@@ -481,28 +482,30 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::addColVector(Matrix<type> &&b
 }
 
 template <typename type>
-void Propulsion::Matrix<type>::subtract(const Matrix<type> &b)
+void Propulsion::Matrix<type>::subtract(const Matrix<type> &b, bool printTime)
 {
     if(b.rows == this->rows && b.cols == this->cols)
     {
+        auto temp = std::make_unique<type[]>(this->rows * this->cols);
         // Use CUDA to speed up the process.
         if(this->totalSize >= MATRIX_CUDA_ADD_DIFF_ELEM_SIZE)
         {
-            std::cout << "Here!" << std::endl;
-            auto temp = std::make_unique<type[]>(this->rows * this->cols);
-            cudaSubtract1DArraysWithStride(this->M.get(), b.M.get(), temp.get(), this->rows * this->cols);
+            cudaSubtract1DArraysWithStride(this->M.get(), b.M.get(), temp.get(), this->rows * this->cols, printTime);
             this->M = std::move(temp);
         }
-        for(unsigned i = 0; i < this->totalSize; i++)
+            // Else just do it via HOST avx.
+        else
         {
-            this->M[i] = this->M[i] - b.M[i];
+            Propulsion::hostSubtract1DArraysAVX256(this->getArray(), b.M.get(), temp.get(), this->totalSize, printTime);
         }
+
+        this->M = std::move(temp);
     }
     else
     {
         std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  + ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")";
         throw Propulsion::Matrix<type>::MatrixException(err.c_str(),
-                                                        __FILE__, __LINE__, "subtract" , "subtract Requires all dimension sizes to be the same as the operation is element wise.");
+                                                        __FILE__, __LINE__, "subtract" , "Subtraction Requires all dimension sizes to be the same as the operation is element wise.");
     }
 }
 
@@ -1448,3 +1451,4 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::subtractBroadScalar(Matrix<ty
 
     return ret;
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                

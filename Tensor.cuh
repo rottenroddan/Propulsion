@@ -5,6 +5,7 @@
 #include "TensorHelpers.cu"
 
 
+
 /*
      * Template packing verification making sure that the value(s) provided as
      * the dims are in fact convertible to unsigned values.
@@ -25,6 +26,8 @@ class Propulsion::Tensor {
 private:
     std::deque<std::unique_ptr<Propulsion::Matrix<type>>> tensor;
     std::deque<unsigned long long> dims;
+
+    friend class Propulsion::Matrix<type>;
 
 public:
     /**
@@ -197,7 +200,7 @@ public:
     };
 
     /**
-     * \brief       Returns a reference of the type from the given input as a
+     * \brief           Returns a reference of the type from the given input as a
      *              k x ... x m x n indexing. Throws TensorException if needed.
      *
      * \details         Return a reference of the index from the packed template
@@ -317,6 +320,19 @@ public:
         return this->tensor[index]->operator()(values[totalArgs - 2], values[totalArgs - 1]);
     }
 
+    /**
+     * \brief           Checks if the dims are all the same and returns T/F.
+     *
+     * \details         Checks if the dims are all the same and returns T/F.
+     *              If the dims aren't the same size, checking element wise
+     *              is skipped and returned false right away.
+     *
+     * @throws      None.
+     *
+     * @param       second Second Tensor to be compared against.
+     *
+     * @return      true/false if the tensors dims are the exact same.
+     */
     bool checkAllDimensionsMatch(Propulsion::Tensor<type>& second)
     {
         // Check first if the total dimensions are the same.
@@ -338,17 +354,135 @@ public:
 
         return true;
     }
-
-    void add(Propulsion::Tensor<type>& B)
+    /**
+     * \brief           Adds the two tensors together, stores the summation
+     *              in this tensor.
+     *
+     * \details         Uses Matrix add method to perform
+     * @param B
+     */
+    void add(Propulsion::Tensor<type>& B, bool printTime = false)
     {
+        std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
         // Check if dimensions are the same that way we can add them together.
         if(this->checkAllDimensionsMatch(B))
         {
+            for(unsigned long long i = 0; i < this->tensor.size(); i++)
+            {
+                this->tensor[i]->add(*B.tensor[i].get());
+            }
+        }
+        else
+        {
+            // Generate TensorException
+            std::string err = "";
+            // Using getDimsExceptionString helper function.
+            err += "Tensor Size Mismatch in Add, this: " + getDimsExceptionString(this->dims) + " vs " + getDimsExceptionString(B.dims);
+            throw Tensor<type>::TensorException(err.c_str(), __FILE__, __LINE__,
+                                                "add", "Both Tensors must match all dimensions with one another, as its element wise addition.");
+        }
+
+
+        if(printTime){
+            std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+            float milliseconds = (float) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000;
+
+            std::cout << std::left << std::setw(TIME_FORMAT) << " HOST/CUDA: Tensor add: " <<
+                      std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
+                      " ms." << std::setw(TIME_WIDTH) << (this->getTotalSize() * sizeof(type)) / milliseconds / 1e6 << " GB/s" << std::endl;
+        }
+
+
+
+    }
+
+    void addCudaStream(Propulsion::Tensor<type>& B, bool printTime = false)
+    {
+        std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
+        // Check if dimensions are the same that way we can add them together.
+        if(this->checkAllDimensionsMatch(B))
+        {
+            const int blockSize = 256;
+
+            // Declare number of streams and create Stream array.
+            unsigned long long nStreams = this->tensor.size();
+            cudaStream_t *streams = new cudaStream_t[nStreams];
+
+            // Get stream size, in this case the size of the matrix of the tensor(....nxm) => nxm = streamSize.
+            unsigned long long streamSize = this->tensor[0]->getTotalSize();
+            unsigned long long streamBytes = streamSize * sizeof(type);
+
+            for(unsigned long long i = 0; i < nStreams; i++)
+            {
+                gpuErrchk( cudaStreamCreateWithFlags(&(streams[i]), cudaStreamNonBlocking));
+            }
+
+            // Calculate total bytes from each Matrix in Tensor.
+            unsigned long long tensorTotalBytes = this->getTotalSize() * sizeof(type);
+
+            /*
+             * Allocate total bytes for the device pointers.
+             * Since using streams, we are allocating the entire tensor
+             * to the GPU.
+             */
+            type *dev_a, *dev_b, *dev_c;
+            gpuErrchk( cudaMalloc((void**) &dev_a, tensorTotalBytes));
+            gpuErrchk( cudaMalloc((void**) &dev_b, tensorTotalBytes));
+            gpuErrchk( cudaMalloc((void**) &dev_c, tensorTotalBytes));
+
+            /*
+             * Look I know, this is difficult to read, but if you don't understand streams, you might now get this either.
+             * 1. Essentially I have broken down a stream into whole Matrix. I create a size array of the size of the whole
+             * tensors(this and B) as dev_a/dev_b respectively, then dev_c as the outcome array.
+             *
+             * 2. streamSize is equal to the Matrices total size. E.g. A 3x4x4 Tensor -> streamSize = 16. Use this to pass
+             * to the kernel, and most importantly the offset value. Offset value is passed along as an index from which
+             * the kernel starts at in the device array.
+             */
+            for(unsigned long long i = 0; i < nStreams; i++)
+            {
+                unsigned long long offset = i * streamSize;
+                gpuErrchk( cudaMemcpyAsync( &dev_a[offset], this->tensor[i]->getArray(), streamBytes, cudaMemcpyHostToDevice, streams[i]));
+                gpuErrchk( cudaMemcpyAsync( &dev_b[offset], B.tensor[i]->getArray(), streamBytes, cudaMemcpyHostToDevice, streams[i]));
+
+                // Call deviceAdd1DMatrices with the current stream obj. Offset for the correct positions in the array.
+                deviceAdd1DMatrices<<<std::ceil((double)streamSize/(double)blockSize),blockSize, 0, streams[i]>>>(&dev_a[offset], &dev_b[offset], &dev_c[offset], streamSize);
+
+                // Copy Device array back to pointer.
+                gpuErrchk( cudaMemcpyAsync( this->tensor[i]->getArray(), &dev_c[offset], streamBytes, cudaMemcpyDeviceToHost, streams[i]));
+            }
+
+            // Wait for device.
+            gpuErrchk( cudaDeviceSynchronize());
+
+            for(unsigned long long i = 0; i < nStreams; i++) {
+                gpuErrchk( cudaStreamDestroy(streams[i]));
+            }
+
+
+            // Free Memory in Device.
+            gpuErrchk( cudaFree(dev_a));
+            gpuErrchk( cudaFree(dev_b));
+            gpuErrchk( cudaFree(dev_c));
+
+
+            if(printTime){
+                std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+                float milliseconds = (float) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000;
+
+                std::cout << std::left << std::setw(TIME_FORMAT) << " CUDA: CUDA STREAM Tensor add: " <<
+                          std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
+                          " ms." << std::setw(TIME_WIDTH) << (this->getTotalSize() * sizeof(type)) / milliseconds / 1e6 << " GB/s" << std::endl;
+            }
 
         }
         else
         {
+            // Generate TensorException
             std::string err = "";
+            // Using getDimsExceptionString helper function.
             err += "Tensor Size Mismatch in Add, this: " + getDimsExceptionString(this->dims) + " vs " + getDimsExceptionString(B.dims);
             throw Tensor<type>::TensorException(err.c_str(), __FILE__, __LINE__,
                                                 "add", "Both Tensors must match all dimensions with one another, as its element wise addition.");
@@ -421,6 +555,17 @@ public:
     const std::deque<unsigned long long>& getDims()
     {
         return this->dims;
+    }
+
+
+    unsigned long long getTotalSize()
+    {
+        unsigned long long tmp = 1;
+        for(unsigned long long i = 0; i < this->dims.size(); i++)
+        {
+            tmp *= this->dims[i];
+        }
+        return tmp;
     }
 
     /**

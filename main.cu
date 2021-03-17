@@ -914,7 +914,6 @@ void matrixMultiplicationTests()
         Propulsion::Matrix<float> aCpuCopy = A;
         Propulsion::Matrix<float> aStrassenCopy = A;
 
-        A.add(A + B);
 
 
         // Time the cpu dot product of B
@@ -938,7 +937,7 @@ void matrixMultiplicationTests()
 
         // Time the cuda dot product of B
         start = std::chrono::high_resolution_clock::now();
-        A.cudaDotProduct(A + B, false);
+        A.cudaDotProduct(B, false);
         end = std::chrono::high_resolution_clock::now();
         cudaTimes[i] = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
 
@@ -988,9 +987,9 @@ void tensorTests()
     // Test for accessing
     Propulsion::Tensor<int> T(2, 2, 3, 3);
     // Test for Addition/Difference
-    Propulsion::Tensor<int> addSubA(1, 3, 4, 4);
-    Propulsion::Tensor<int> addSubB(1, 3, 4, 4);
-    Propulsion::Tensor<int> addSubC(1, 3, 4, 4);
+    Propulsion::Tensor<int> addSubA(100, 1200, 1200);
+    Propulsion::Tensor<int> addSubB(100, 1200, 1200);
+    Propulsion::Tensor<int> addSubC(2, 3, 3);
 
     p(0, 0, 0,3,3) = 10;
     p(0, 0, 1,3,3) = 10;
@@ -1060,11 +1059,24 @@ void tensorTests()
      */
     addSubA.populateWithRandomRealDistribution(-6, 6);
     addSubB.populateWithRandomRealDistribution(-6, 6);
-    addSubA.print();
-    addSubB.print();
 
-    addSubA.add(addSubB);
-    addSubA.print();
+    //addSubA.add(addSubB, true);
+    /*
+    addSubA.add(addSubB, true);
+    addSubA.add(addSubB, true);
+    addSubA.add(addSubB, true);
+    addSubA.add(addSubB, true);
+    addSubA.add(addSubB, true);
+    addSubA.add(addSubB, true);
+    */
+
+    addSubA.addCudaStream(addSubB, true);
+    addSubA.addCudaStream(addSubB, true);
+    addSubA.addCudaStream(addSubB, true);
+    addSubA.addCudaStream(addSubB, true);
+    addSubA.addCudaStream(addSubB, true);
+    addSubA.addCudaStream(addSubB, true);
+
 }
 
 void aiClassifier()
@@ -1094,8 +1106,8 @@ int main()
               "2::::::::::::::::::2     D::::::::::::DDD\n" <<
               "22222222222222222222     DDDDDDDDDDDDD\n\n"; //        arrays....*/
 
-    test_one_dimensional_array_operations();
-    secondMatrixTests();
+    //test_one_dimensional_array_operations();
+    //secondMatrixTests();
 
 
     /*
@@ -1114,7 +1126,7 @@ int main()
     }*/
 
     tensorTests();
-    matrixMultiplicationTests();
+    //matrixMultiplicationTests();
 
 
 

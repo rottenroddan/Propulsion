@@ -71,6 +71,8 @@ numeric
 -
 exception
 -
+assert.h
+-
 immintrin.h
 -
 smmintrin.h
@@ -143,6 +145,16 @@ C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
 C:/Users/steve/CLionProjects/Propulsion/Tensor.cuh
 Propulsion.cuh
 C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
+TensorHelpers.cu
+C:/Users/steve/CLionProjects/Propulsion/TensorHelpers.cu
+
+C:/Users/steve/CLionProjects/Propulsion/TensorHelpers.cu
+string
+-
+deque
+-
+iostream
+-
 
 C:/Users/steve/CLionProjects/Propulsion/main.cu
 chrono
