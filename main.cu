@@ -214,7 +214,7 @@ void matrixFunctions()
                4,5,67,8,
                4,4,4,4};
 
-    Propulsion::Matrix<int> M(4,4,Propulsion::Matrix<int>::custom, 5,Propulsion::Matrix<int>::def);
+    Propulsion::Matrix<int> M(4,4,Propulsion::Matrix<int>::MatrixMemType::pinned, Propulsion::Matrix<int>::custom, 5,Propulsion::Matrix<int>::def);
     M.print();
     Propulsion::Matrix<int> Q(d, 4,4);
     Q.print();
@@ -238,13 +238,13 @@ void matrixFunctions()
     }
 
     float H[] = {1,2,3,4};
-    Propulsion::Matrix<int> Mat(4,3,Propulsion::Matrix<int>::MatrixInitVal::custom, 3, Propulsion::Matrix<int>::diagonal);
+    Propulsion::Matrix<int> Mat(4,3,Propulsion::Matrix<int>::MatrixMemType::pinned,Propulsion::Matrix<int>::MatrixInitVal::custom, 3, Propulsion::Matrix<int>::diagonal);
     Mat.print();
 
     std::cout << Mat.at(3,2) << std::endl;
 
     // Program this constuctor later.
-    Propulsion::Matrix<float> Nat(H,4,4, Propulsion::Matrix<float>::MatrixInitVal::custom, Propulsion::Matrix<float>::diagonal);
+    Propulsion::Matrix<float> Nat(H,4,4, Propulsion::Matrix<float>::MatrixMemType::pinned,Propulsion::Matrix<float>::MatrixInitVal::custom, Propulsion::Matrix<float>::diagonal);
 
     float xyz[] = {0,0,1,
                    1,1,1,
@@ -885,6 +885,8 @@ void secondMatrixTests()
 
 void matrixMultiplicationTests()
 {
+    Propulsion::Matrix<float>::MatrixMemType defMemType = Propulsion::Matrix<float>::MatrixMemType::paged;
+
     // Declare clock times.
     std::chrono::high_resolution_clock::time_point start;
     std::chrono::high_resolution_clock::time_point end;
@@ -904,22 +906,24 @@ void matrixMultiplicationTests()
     for(unsigned i = 0; i < sizeof(SZ) / sizeof(unsigned); i++)
     {
         // Create new A & B matrices with the SZxSZ as dims.
-        Propulsion::Matrix<float> A(SZ[i], SZ[i]);
-        Propulsion::Matrix<float> B(SZ[i], SZ[i]);
+        Propulsion::Matrix<float> A(SZ[i], SZ[i], Propulsion::Matrix<float>::pinned);
+        Propulsion::Matrix<float> B(SZ[i], SZ[i], Propulsion::Matrix<float>::pinned);
 
         // Populate with random values.
         Propulsion::Matrix<float>::randomRealDistribution(A, -1.0, 1.0);
         Propulsion::Matrix<float>::randomRealDistribution(B, -1.0, 1.0);
 
-        Propulsion::Matrix<float> aCpuCopy = A;
-        Propulsion::Matrix<float> aStrassenCopy = A;
+        Propulsion::Matrix<float> aCpuCopy(A, Propulsion::Matrix<float>::paged);
+        Propulsion::Matrix<float> bCpuCopy(B, Propulsion::Matrix<float>::paged);
+        Propulsion::Matrix<float> aStrassenCopy(A, Propulsion::Matrix<float>::paged);
+        Propulsion::Matrix<float> bStrassenCopy(B, Propulsion::Matrix<float>::paged);
 
 
 
         // Time the cpu dot product of B
         start = std::chrono::high_resolution_clock::now();
         if(SZ[i] < 8192) {
-            aCpuCopy.dot(B, false);
+            aCpuCopy.dot(bCpuCopy, false);
             end = std::chrono::high_resolution_clock::now();
             cpuTimes[i] = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
         }
@@ -931,7 +935,7 @@ void matrixMultiplicationTests()
 
         // Time the cpu on strassen multiplication
         start = std::chrono::high_resolution_clock::now();
-        aStrassenCopy.strassenMultiplication(B);
+        aStrassenCopy.strassenMultiplication(bStrassenCopy);
         end = std::chrono::high_resolution_clock::now();
         strassenTimes[i] = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
 
@@ -1107,7 +1111,7 @@ int main()
               "22222222222222222222     DDDDDDDDDDDDD\n\n"; //        arrays....*/
 
     //test_one_dimensional_array_operations();
-    //secondMatrixTests();
+    secondMatrixTests();
 
 
     /*
@@ -1125,8 +1129,8 @@ int main()
         std::cout << "Wow" << std::endl;
     }*/
 
-    tensorTests();
-    //matrixMultiplicationTests();
+    //tensorTests();
+    matrixMultiplicationTests();
 
 
 

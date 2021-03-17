@@ -102,6 +102,29 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 namespace Propulsion {
 
+    /**
+     * \brief           A deleter function used in Matrix unique_ptr as a way to
+     *              call the cudaFreeHost method. Since we have pinned memory and
+     *              paged memory.
+     */
+    template<typename type>
+    void freePinnedMemory(type* ptr_)
+    {
+        gpuErrchk(cudaFreeHost(ptr_));
+    }
+
+    /**
+     * \brief           A deleter function used in Matrix unique_ptr as a way to
+     *              call the cudaFreeHost or delete [] type*. Since we can have
+     *              both pinned or paged memory.
+     */
+    template<typename type>
+    void freePagedMemory(type* ptr_)
+    {
+        delete [] ptr_;
+    }
+
+
     /*
      * Class:       Matrix
      *
@@ -162,6 +185,8 @@ namespace Propulsion {
         // Enumerators for the types of Matrix that can be constructed.
         enum MatrixInitType { def, diagonal, upperTriangle, lowerTriangle};
 
+        enum MatrixMemType {paged, pinned};
+
 
         /*
          * Function     Matrix()
@@ -183,6 +208,8 @@ namespace Propulsion {
         Matrix(const Matrix& copyM);
 
 
+        Matrix(const Matrix& copyM, MatrixMemType memType);
+
 
         Matrix(Matrix&&);
 
@@ -203,7 +230,7 @@ namespace Propulsion {
          *
          * Author:      Steven Roddan on 8/4/2020.
          */
-        explicit Matrix(unsigned, MatrixInitVal = zero, type customVal = 0, MatrixInitType = def );
+        explicit Matrix(unsigned rowAndColSize, MatrixMemType memType = MatrixMemType::pinned, MatrixInitVal = zero, type customVal = 0, MatrixInitType = def );
 
         /*
          * Function:    Matrix(unsigned rows, unsigned rows, MatrixInitVal mit, type customVal, MatrixInitType miv)
@@ -223,7 +250,7 @@ namespace Propulsion {
          *
          * Author:      Steven Roddan on 8/4/2020.
          */
-        Matrix(unsigned, unsigned, MatrixInitVal = zero, type customVal = 0, MatrixInitType = def);
+        Matrix(unsigned, unsigned, MatrixMemType memType = MatrixMemType::pinned, MatrixInitVal = zero, type customVal = 0, MatrixInitType = def);
 
         /*
          * Function:    Matrix(type *array, unsigned rowAndColSize)
@@ -237,7 +264,7 @@ namespace Propulsion {
          *
          * Author:      Steven Roddan on 8/4/2020.
          */
-        Matrix(type *, unsigned);
+        Matrix(type *, unsigned,  MatrixMemType memType = MatrixMemType::pinned);
 
         /*
          * Function:    Matrix(type *array, unsigned rows, unsigned cols, MatrixInitVal miv = MatrixInitVal::custom,
@@ -256,7 +283,7 @@ namespace Propulsion {
          *
          * Author:      Steven Roddan on 8/4/2020.
          */
-        Matrix(type *, unsigned , unsigned , MatrixInitVal miv = MatrixInitVal::custom, type customVal = NULL, MatrixInitType mit = MatrixInitType::def);
+        Matrix(type *, unsigned , unsigned ,  MatrixMemType memType = MatrixMemType::pinned, MatrixInitVal miv = MatrixInitVal::custom, type customVal = NULL, MatrixInitType mit = MatrixInitType::def);
 
 
 
@@ -387,16 +414,20 @@ namespace Propulsion {
 
         ~Matrix();
     private:
-        std::unique_ptr<type[]> M; // Matrix Array as 1D.
+        std::unique_ptr<type[], void(*)(type*)> M; // Matrix Array as 1D.
 
         unsigned rows, cols, totalSize;
+        MatrixMemType memT = MatrixMemType::pinned;
 
 
         void generateMatrix(MatrixInitVal, MatrixInitType, type customVal, type * = nullptr);
-        std::unique_ptr<type[]> generateZeroMatrixArray(unsigned );
-        std::unique_ptr<type[]> generateNullMatrixArray(unsigned );
-        std::unique_ptr<type[]> generateDefaultMatrixArray(unsigned, type, type *);
-        std::unique_ptr<type[]> generateDiagonalMatrixArray(unsigned, type, type *);
+        std::unique_ptr<type[], void(*)(type*)> generateZeroMatrixArray(unsigned );
+        std::unique_ptr<type[], void(*)(type*)> generateNullMatrixArray(unsigned );
+        std::unique_ptr<type[], void(*)(type*)> generateDefaultMatrixArray(unsigned, type, type *);
+        std::unique_ptr<type[], void(*)(type*)> generateDiagonalMatrixArray(unsigned, type, type *);
+
+        void createPinnedMemory();
+        void createPagedMemory();
 
         static Propulsion::Matrix<type> recursiveStrassen(Matrix<type> A, Matrix<type> B);
     };

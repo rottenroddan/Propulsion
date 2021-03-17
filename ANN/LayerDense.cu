@@ -13,7 +13,7 @@ Propulsion::ArtificialNeuralNetwork::LayerDense::LayerDense(unsigned nInputs, un
     weights = std::make_shared<Matrix<double>>(nInputs, nNeurons);
 
     // Create the bias layer with 1 row and N->Neurons columns. Since each neuron has some bias.
-    biases = std::make_shared<Matrix<double>>(1,nNeurons,Matrix<double>::MatrixInitVal::zero);
+    biases = std::make_shared<Matrix<double>>(1,nNeurons,Propulsion::Matrix<double>::MatrixMemType::pinned, Matrix<double>::MatrixInitVal::zero);
 
     // Generate random weight valaues now.
     Propulsion::Matrix<double>::randomRealDistribution( weights, -1, 1);
