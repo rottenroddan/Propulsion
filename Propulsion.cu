@@ -4,29 +4,37 @@
 #pragma once
 #include "Propulsion.cuh"
 
-
-
-
-
-__global__ void deviceHelloWorld()
+template<typename type>
+__global__ void deviceAccumulateAddMatrices(type *dev_a, type *dev_b, unsigned cols)
 {
-    if(threadIdx.x == 0)
-        printf("Hello World! From thread [%d,%d]!\n", blockIdx.x , threadIdx.x);
+    unsigned tID = blockDim.x * blockIdx.x + threadIdx.x;
+    if (tID < cols)
+    {
+        dev_a[tID] = dev_a[tID] + dev_b[tID];
+    }
 }
 
-void Propulsion::helloWorld() {
-
-    int b,t;
-    b = 10240;
-    t = 1024;
-
-    deviceHelloWorld<<<b,t>>>();
-    cudaDeviceSynchronize();
-    return;
+template<typename type>
+__global__ void deviceAccumulateSubtractMatrices(type *dev_a, type *dev_b, unsigned cols)
+{
+    unsigned tID = blockDim.x * blockIdx.x + threadIdx.x;
+    if (tID < cols)
+    {
+        dev_a[tID] = dev_a[tID] - dev_b[tID];
+    }
 }
 
+template<typename type>
+__global__ void deviceAccumulateSchurProductMatrices(type *dev_a, type *dev_b, unsigned cols)
+{
+    unsigned tID = blockDim.x * blockIdx.x + threadIdx.x;
+    if (tID < cols)
+    {
+        dev_a[tID] = dev_a[tID] * dev_b[tID];
+    }
+}
 
-template<typename type> __global__ void deviceAdd1DMatrices(type *dev_a, type *dev_b, type *dev_c, unsigned cols)
+template<typename type> __global__ void deviceAddMatrices(type *dev_a, type *dev_b, type *dev_c, unsigned cols)
 {
     unsigned tID = blockDim.x * blockIdx.x + threadIdx.x;
     if (tID < cols)
@@ -61,7 +69,7 @@ void Propulsion::cudaAdd1DArrays(type *a, type *b, type *c, unsigned cols, bool 
     int block = cols / (MAX_THREADS) + 1;
 
     gpuErrchk(cudaEventRecord(start));
-    deviceAdd1DMatrices<<<block,MAX_THREADS>>>(dev_a, dev_b, dev_c, cols);
+    deviceAddMatrices<<<block, MAX_THREADS>>>(dev_a, dev_b, dev_c, cols);
 
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize()); // Synchronize CUDA with HOST. Wait for Device.
@@ -833,7 +841,7 @@ void Propulsion::hostAdd1DArraysInt32AVX256(int *a, int *b, int *c, unsigned col
 
         std::cout << std::left << std::setw(TIME_FORMAT) << " HOST:  1D Array AVX-256 Addition(Int32): " <<
                   std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
-                  " ms." << std::setw(TIME_WIDTH) << (cols * sizeof(int)) / milliseconds / 1e6 << " GB/s" << std::endl;
+                  " ms." << std::setw(TIME_WIDTH) << ((float)cols * sizeof(int)) / milliseconds / 1e6 << " GB/s" << std::endl;
     }
     return;
 }

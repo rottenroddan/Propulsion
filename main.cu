@@ -885,7 +885,7 @@ void secondMatrixTests()
 
 void matrixMultiplicationTests()
 {
-    Propulsion::Matrix<float>::MatrixMemType defMemType = Propulsion::Matrix<float>::MatrixMemType::paged;
+    //Propulsion::Matrix<float>::MatrixMemType defMemType = Propulsion::Matrix<float>::MatrixMemType::paged;
 
     // Declare clock times.
     std::chrono::high_resolution_clock::time_point start;
@@ -991,9 +991,10 @@ void tensorTests()
     // Test for accessing
     Propulsion::Tensor<int> T(2, 2, 3, 3);
     // Test for Addition/Difference
-    Propulsion::Tensor<int> addSubA(100, 1200, 1200);
-    Propulsion::Tensor<int> addSubB(100, 1200, 1200);
+    Propulsion::Tensor<int> addSubA(10, 1200, 1200);
+    Propulsion::Tensor<int> addSubB(10, 1200, 1200);
     Propulsion::Tensor<int> addSubC(2, 3, 3);
+
 
     p(0, 0, 0,3,3) = 10;
     p(0, 0, 1,3,3) = 10;
@@ -1008,6 +1009,7 @@ void tensorTests()
      * Exception Tests for at(...args) method.
      * -Test All Elements are accessible first
      */
+    /*
     try {
         int temp = T.at(0, 0, 0, 0);
         printExceptionTestResults("(Tensor.at should not throw an exception)", true, __FILE__, __LINE__);
@@ -1024,7 +1026,7 @@ void tensorTests()
 
     /*
      * Check that getTotalDims is functional.
-     */
+     *//*
     if(p.getTotalDims() == 5) {
         printExceptionTestResults("P should have 5 Dimensions: " + std::to_string( p.getTotalDims()), true, __FILE__, __LINE__);
     }
@@ -1035,7 +1037,7 @@ void tensorTests()
 
     /*
      * Check that getDims returns a deque/std container.
-     */
+     *//*
     if(p.getDims()[1] == 3) {
         printExceptionTestResults("(P Dim[1] should equal 3: " + std::to_string(p.getDims()[1]) + ")", true, __FILE__,
                                   __LINE__);
@@ -1048,7 +1050,7 @@ void tensorTests()
 
     /*
      * Check that dimension match on same Tensor(obv)
-     */
+     *//*
     if(p.checkAllDimensionsMatch(p))
     {
         printExceptionTestResults("(P Dims should match itself)", true, __FILE__, __LINE__);
@@ -1064,22 +1066,53 @@ void tensorTests()
     addSubA.populateWithRandomRealDistribution(-6, 6);
     addSubB.populateWithRandomRealDistribution(-6, 6);
 
-    //addSubA.add(addSubB, true);
-    /*
     addSubA.add(addSubB, true);
     addSubA.add(addSubB, true);
     addSubA.add(addSubB, true);
     addSubA.add(addSubB, true);
     addSubA.add(addSubB, true);
     addSubA.add(addSubB, true);
-    */
 
-    addSubA.addCudaStream(addSubB, true);
-    addSubA.addCudaStream(addSubB, true);
-    addSubA.addCudaStream(addSubB, true);
-    addSubA.addCudaStream(addSubB, true);
-    addSubA.addCudaStream(addSubB, true);
-    addSubA.addCudaStream(addSubB, true);
+
+    addSubA.cudaAdd(addSubB, true);
+    addSubA.cudaAdd(addSubB, true);
+    addSubA.cudaAdd(addSubB, true);
+    addSubA.cudaAdd(addSubB, true);
+    addSubA.cudaAdd(addSubB, true);
+    addSubA.cudaAdd(addSubB, true);
+
+
+
+    std::cout << "A: " << addSubA(9, 1199, 1199) << std::endl;
+    std::cout << "B: " << addSubB(9, 1199, 1199) << std::endl;
+    std::cout << "A-B" << addSubA(9, 1199, 1199) - addSubB(9, 1199, 1199) << std::endl;
+
+    addSubA.cudaSubtract(addSubB);
+    std::cout << "A: " << addSubA(9, 1199, 1199) << std::endl;
+
+    /*
+     * Copy Constructor Tests
+     */
+    Propulsion::Tensor<float> constructA(3, 4, 4);
+    constructA.populateWithRandomRealDistribution(-6, 6);
+    Propulsion::Tensor<float> constructB = constructA;
+
+    constructA.print();
+    std::cout << "B Copied into A" << std::endl << std::endl;
+    constructB.print();
+
+
+    std::cout << "---Scalar Test---" << std::endl
+            << "Multiplying by 100" << std::endl;
+    Propulsion::Tensor<float> scalarT(3, 4, 4);
+    scalarT(0, 3, 3) = 10;
+    scalarT.populateWithRandomRealDistribution(-9, 9);
+    scalarT.print();
+
+    scalarT.scalarProduct(100.0);
+    scalarT.print();
+
+
 
 }
 
@@ -1129,8 +1162,11 @@ int main()
         std::cout << "Wow" << std::endl;
     }*/
 
-    //tensorTests();
-    matrixMultiplicationTests();
+
+    //matrixMultiplicationTests();
+
+
+    tensorTests();
 
 
 
