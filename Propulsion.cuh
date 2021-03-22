@@ -139,11 +139,7 @@ namespace Propulsion {
      *              are implemented to do so. While many of the algorithms are naive, the
      *              speed boosts are significant enough anyways.
      *
-     *              TO-DO:
-     *              -isIdentityMatrix
-     *              -cudaTranspose
-     *              -avxTranspose
-     *              -ANN stuff
+     *
      */
     template<typename type>
     class Matrix
@@ -339,59 +335,524 @@ namespace Propulsion {
         static void print(type *, unsigned, unsigned );
 
 
-        // Matrix Math Related Functions
-        void add( const Matrix<type> &b, bool printTime = false);
+        /**
+         * \brief           Adds Parameter matrix to this Matrix element wise.
+         *
+         * \details         Adds parameter matrix to this Matrix element wise. If
+         *              the size of the Matrices is greater than a defined constant
+         *              (MATRIX_CUDA_ADD_DIFF_ELEM_SIZE) then CUDA is used, else
+         *              AVX2 addition is used.
+         *
+         * @throws      MatrixException if the dimensions do not match.
+         *
+         * @param       B Matrix that is being added to this.
+         * @param       printTime Bool that prints stats about the overhead of the operation.
+         *
+         * @return      None.
+         */
+        void add(const Matrix<type> &B, bool printTime = false);
 
+        /**
+         * \brief           Adds a row vector to each row of this matrix. Returns
+         *              a Matrix.
+         *
+         * \details         Adds a row vector to each row of this matrix. If the
+         *              size of the row vector param isn't of (1xN) and N doesn't match
+         *              the size of the this columns, then a MatrixException is thrown
+         *              as the operation can not be executed.
+         *
+         * @throws      MatrixException if Dimensions aren't (MxN) & (1xN) respectively.
+         *
+         * @param       b Matrix parameter that should be (1xN) size.
+         *
+         * @return      Matrix with the added row vector!
+         */
         Matrix<type> addRowVector(Matrix<type> &b);
+
+        /**
+         * \brief           Adds a row vector to each row of this matrix. Returns
+         *              a Matrix.
+         *
+         * \details         Adds a row vector to each row of this matrix. If the
+         *              size of the row vector param isn't of (1xN) and N doesn't match
+         *              the size of the this columns, then a MatrixException is thrown
+         *              as the operation can not be executed.
+         *
+         * @throws      MatrixException if Dimensions aren't (MxN) & (1xN) respectively.
+         *
+         * @param       b Matrix parameter that should be (1xN) size.
+         *
+         * @return      Matrix with the added row vector!
+         */
         Matrix<type> addRowVector(Matrix<type> &&b);
+
+        /**
+         * \brief           Adds a col vector to each col of this matrix. Returns
+         *              a Matrix.
+         *
+         * \details         Adds a col vector to each col of this matrix. If the
+         *              size of the col vector param isn't of (Nx1) and N doesn't match
+         *              the size of the this rows, then a MatrixException is thrown
+         *              as the operation can not be executed.
+         *
+         * @throws      MatrixException if Dimensions aren't (MxN) & (Nx1) respectively.
+         *
+         * @param       b Matrix parameter that should be (Nx1) size.
+         *
+         * @return      Matrix with the added col vector!
+         */
         Matrix<type> addColVector(Matrix<type> &b);
+
+        /**
+         * \brief           Adds a col vector to each col of this matrix. Returns
+         *              a Matrix.
+         *
+         * \details         Adds a col vector to each col of this matrix. If the
+         *              size of the col vector param isn't of (Nx1) and N doesn't match
+         *              the size of the this rows, then a MatrixException is thrown
+         *              as the operation can not be executed.
+         *
+         * @throws      MatrixException if Dimensions aren't (MxN) & (Nx1) respectively.
+         *
+         * @param       b Matrix parameter that should be (Nx1) size.
+         *
+         * @return      Matrix with the added col vector!
+         */
         Matrix<type> addColVector(Matrix<type> &&b);
 
-        void subtract( const Matrix<type> &b, bool printTime = false);
-        void cudaDotProduct(const Matrix<type> &b, bool printTime = false);
-        void dot(const Matrix<type> &b, bool printTime = false);
-        void schurProduct(const Matrix<type> &b, bool printTime = false);
-        void multiply( type scalar);
-        void strassenMultiplication(const Matrix<type> &b);
+        /**
+         * \brief           Performs Matrix Difference on B parameter with this.
+         *
+         * \details         Performs Matrix Difference on B parameter with this.
+         *              The resultant is stored in this Matrix, and only throws
+         *              a MatrixException if the dimensions are mismatched with
+         *              one another.
+         *
+         * @throws      MatrixException If the dimensions don't match.
+         *
+         * @param       B Matrix that is being subtracted to this.
+         * @param       printTime Bool that prints stats about the overhead of the operation.
+         *
+         * @return      None.
+         */
+        void subtract(const Matrix<type> &B, bool printTime = false);
+
+        /**
+         * \brief           Performs dot product on the given Matrix using
+         *              CUDA.
+         *
+         * \details         Performs dot product on the given Matrix using
+         *              CUDA. Makes use of Propulsions static method cudaDotProduct
+         *              to handle the operation. Throws an exception if This Matrix
+         *              columns don't match B's columns. Returns none.
+         *
+         * @throws      MatrixException If this->cols != B->cols.
+         *
+         * @param       B Matrix that is being added to this.
+         * @param       printTime Bool that prints stats about the overhead of the operation.
+         *
+         * @return      None.
+         */
+        void cudaDotProduct(const Matrix<type> &B, bool printTime = false);
+
+        /**
+         * \brief           Performs dot product on the given Matrix using
+         *              host.
+         *
+         * \details         Performs dot product on the given Matrix using
+         *              host code. Calls Propulsion static method hostDotProduct
+         *              to execute the operation if nothing is thrown from this
+         *              method. Throws if this matrix's columns don't match B's
+         *              columns. Returns none.
+         *
+         * @throws      MatrixException If this->cols != B->cols
+         *
+         * @param       B Matrix that is being added to this.
+         * @param       printTime Bool that prints stats about the overhead of the operation.
+         *
+         * @return      None.
+         */
+        void dot(const Matrix<type> &B, bool printTime = false);
+
+        /**
+         * \brief           Performs Element Wise product on this Matrix and
+         *              B Matrix Param.
+         *
+         * \details         Performs Element Wise product on this Matrix and
+         *              B Matrix Param. Uses either CUDA or HOST depending
+         *              on whether or not the elements is great enough to
+         *              get a speedup on CUDA. IF not, resorts to HOST.
+         *              Throws MatrixException if the dimensions do not match.
+         *
+         * @throws      MatrixException If the dimensions do not match.
+         *
+         * @param       B Matrix that is being added to this.
+         * @param       printTime Bool that prints stats about the overhead of the operation.
+         *
+         * @return      None.
+         */
+        void schurProduct(const Matrix<type> &B, bool printTime = false);
+
+        /**
+         * \brief           Multiplies this Matrix with the provided scalar.
+         *
+         * \details         Multiplies this Matrix with the provided scalar.
+         *              Uses HOST to do this operation.
+         *
+         * @param       scalar Type param that we are using to mutiply this with.
+         *
+         * @return      None.
+         */
+        void multiply( type scalar) noexcept ;
+
+        /**
+         * \brief           Dot Product of this and B Matrix using Host
+         *              Strassen Recursion.
+         *
+         * \details         Dot Product of this and B Matrix using Strassen
+         *              method to reduce the number of additions and multiplications
+         *              to get the desired result. Uses recursion to perform
+         *              such operation, giving it a Time Complexity of O(n^2.8).
+         *              Throws MatrixException if the col and row doesn't match with
+         *              this and B.
+         *
+         * @throws      MatrixException If the col of this doesnt match the row of B.
+         *
+         * @param       B Matrix to dot product agaisnt this.
+         *
+         * @return      None.
+         */
+        void strassenMultiplication(const Matrix<type> &B);
+
+        /**
+         * \brief           Performs Transpose on this Matrix.
+         *
+         * \details         Performs Transpose on this Matrix. Creates a
+         *              Temporary Matrix and moves the unique ptr to that.
+         *
+         * @return      None.
+         */
         void T();
 
-
+        /**
+         * \brief           Gets the Max value in the Matrix.
+         *
+         * \details         Gets the Max value in the Matrix assuming that
+         *              the type has the operator >.
+         *
+         * @return      Type Max value in the Matrix.
+         */
         type getMax();
+
+        /**
+         * \brief           Gets the Min value in the Matrix.
+         *
+         * \details         Gets the Min value in the Matrix assuming that
+         *              the type has the operator >.
+         *
+         * @return      Type Min value in the Matrix.
+         */
         type getMin();
 
+        /**
+         * \brief           Broadcast s type added to A Matrix Param.
+         *
+         * \details         Adds the type scalar S to A Matrix in every
+         *              element.
+         *
+         * @param       A Matrix to be added with S to element wise.
+         *
+         * @param       s Scalar type to be added to A with.
+         *
+         * @return      Matrix<type> with Broad scalar added to A param.
+         */
         static Matrix<type> addBroadScalar(Matrix<type> &A, type s);
+
+        /**
+         * \brief           Broadcast s type subtracted to A Matrix Param.
+         *
+         * \details         Subtract the type scalar S to A Matrix in every
+         *              element.
+         *
+         * @param       A Matrix to be subtracted with S to element wise.
+         *
+         * @param       s Scalar type to be subtracted to A with.
+         *
+         * @return      Matrix<type> with Broad scalar subtracted to A param.
+         */
         static Matrix<type> subtractBroadScalar(Matrix<type> &A, type s);
+
+        /**
+         * \brief           Sum the rows of the Matrix into a vector of row sums.
+         *
+         * \details         Sums the rows of the Matrix param and returns a Matrix
+         *              that is of a vector shape with the sums along the rows.
+         *
+         * @param       A Matrix that is having each row summed into a Matrix vector.
+         *
+         * @return      None.
+         */
         static Matrix<type> sumRows(Matrix<type> &&A);
+
+        /**
+         * \brief           Sum the rows of the Matrix into a vector of row sums.
+         *
+         * \details         Sums the rows of the Matrix param and returns a Matrix
+         *              that is of a vector shape with the sums along the rows.
+         *
+         * @param       A Matrix that is having each row summed into a Matrix vector.
+         *
+         * @return      None.
+         */
         static Matrix<type> sumRows(Matrix<type> &A);
+
+        /**
+         * \brief           Sum the cols of the Matrix into a vector of col sums.
+         *
+         * \details         Sums the cols of the Matrix param and returns a Matrix
+         *              that is of a vector shape with the sums along the cols.
+         *
+         * @param       A Matrix that is having each col summed into a Matrix vector.
+         *
+         * @return      None.
+         */
         static Matrix<type> sumCols(Matrix<type> &&A);
+
+        /**
+         * \brief           Sum the cols of the Matrix into a vector of col sums.
+         *
+         * \details         Sums the cols of the Matrix param and returns a Matrix
+         *              that is of a vector shape with the sums along the cols.
+         *
+         * @param       A Matrix that is having each col summed into a Matrix vector.
+         *
+         * @return      None.
+         */
         static Matrix<type> sumCols(Matrix<type> &A);
 
 
-        // Getter functions.
+        /**
+         * \brief           Returns the pointer of the unique_ptr if needed. This
+         *              is unsafe as it doesn't gurantee the lifeline of that pointer.
+         *
+         * \details         Returns the pointer of the unique_ptr storing the Matrix
+         *              data if the user needs it. It is unadvised to do so, as the
+         *              pointer is not guranteed to be valid. Discretion is advised.
+         *
+         * @return      Type array pointer of the Matrix. If needed its provided.
+         */
         type* getArray();
+
+        /**
+         * \brief           Returns column size of the this.
+         *
+         * @return      Unsigned Column size.
+         */
         unsigned getColSize();
+
+        /**
+         * \brief           Returns row size of the this.
+         *
+         * @return      Unsigned Row size.
+         */
         unsigned getRowSize();
+
+        /**
+         * \brief           Returns the total size of the matrix.
+         *
+         * @return      Unsigned Total Size(Rows * Cols)
+         */
         unsigned getTotalSize();
 
-        // Relational Functions/Operators
-        bool equalTo(const Matrix<type> &b);
+        /**
+         * \brief           Checks if the Matrix B is equal to this.
+         *
+         * \details         Checks if the Matrix B is equal to this. First
+         *              checks if the dims even match, if so check if the
+         *              values are equal.
+         *
+         * @param       B Matrix to check upon equality.
+         *
+         * @return      Bool Whether the Matrices are equal in value.
+         */
+        bool equalTo(const Matrix<type> &B);
+
+        /**
+         * \brief           Checks if the Matrix B is equal to this.
+         *
+         * \details         Checks if the Matrix B is equal to this. First
+         *              checks if the dims even match, if so check if the
+         *              values are equal.
+         *
+         * @param       B Matrix to check upon equality.
+         *
+         * @return      Bool Whether the Matrices are equal in value.
+         */
         bool operator==(const Matrix<type> &rhs);
+
+        /**
+         * \brief           Checks if this Matrix is an Upper Triangle
+         *
+         * \details         Checks the left values of the diagonal to
+         *              see if they're all zero. Returns false if not,
+         *              true if true.
+         *
+         * @return      Bool Whether this is an Upper Triangle Matrix.
+         */
         bool isUpperTriangular();
+
+        /**
+         * \brief           Checks if this Matrix is an Lower Triangle
+         *
+         * \details         Checks the right values of the diagonal to
+         *              see if they're all zero. Returns false if not,
+         *              true if true.
+         *
+         * @return      Bool Whether this is an Lower Triangle Matrix.
+         */
         bool isLowerTriangular();
+
+        /*
+         * Unimplemented so far. No need yet.
+         */
         bool isIdentityMatrix();
+        /*
+         * Unimplemented so far. No need yet.
+         */
         bool isSymmetric();
 
-        // Get/merge Row/Col Matrix
+        /**
+         * \brief           Returns a Matrix of the row requested.
+         *
+         * \details         Returns a Matrix obj of the row requested
+         *              as row Param. Indexing starting at zero like
+         *              normal.
+         *
+         * @param       row Unsigned param to get that row.
+         *
+         * @return      Matrix of size 1xN of the row requested.
+         */
         Matrix<type> getRowMatrix(unsigned row);
-        Matrix<type> getColMatrix(unsigned col);
-        Matrix<type> getRangeMatrix(unsigned rowStart, unsigned rowEnd, unsigned colStart, unsigned colEnd);
-        Matrix<type> mergeRight(Matrix<type> &b);
-        Matrix<type> mergeBelow(Matrix<type> &b);
 
-        // Access Functions
+        /**
+         * \brief           Returns a Matrix of the col requested.
+         *
+         * \details         Returns a Matrix obj of the col requested
+         *              as col Param. Indexing starting at zero like
+         *              normal.
+         *
+         * @param       col Unsigned param to get that col.
+         *
+         * @return      Matrix of size Nx1 of the row requested.
+         */
+        Matrix<type> getColMatrix(unsigned col);
+
+        /**
+         * \brief           Returns a Matrix that is partitioned as the
+         *              parameters provided from the original matrix.
+         *
+         * \details         Returns a Matrix that is partitioned as the
+         *              parameter provided from the original matrix. If
+         *              the params are bad values(overshot the index),
+         *              then a Matrix with zero values filled is returned.
+         *
+         * @param       rowStart Unsigned starting row position.
+         * @param       rowEnd Unsigned ending row position.
+         * @param       colStart Unsigned starting row position.
+         * @param       colEnd Unsigned ending row position.
+         *
+         * @return      Matrix Of the provided ranges.
+         */
+        Matrix<type> getRangeMatrix(unsigned rowStart, unsigned rowEnd, unsigned colStart, unsigned colEnd);
+
+        /**
+         * \brief           Merges a Matrix to the right of this Matrix.
+         *
+         * \details         Merges a Matrix to the right of this Matrix
+         *              only if it has the same amount of rows.
+         *
+         * @param       B Matrix to be merged with this.
+         *
+         * @return      Matrix obj. with the now Merged Matrices.
+         */
+        Matrix<type> mergeRight(Matrix<type> &B);
+
+        /**
+         * \brief           Merges a Matrix to the bottom of this Matrix.
+         *
+         * \details         Merges a Matrix to the bottom of this Matrix
+         *              only if it has the same amount of cols.
+         *
+         * @param       B Matrix to be merged with this.
+         *
+         * @return      Matrix obj. with the now Merged Matrices.
+         */
+        Matrix<type> mergeBelow(Matrix<type> &B);
+
+        /**
+         * \brief           Returns a reference to the value at index
+         *              i.
+         *
+         * \details         Returns a reference to the value at index
+         *              i. At will throw MatrixException if the index
+         *              is out of range.
+         *
+         * @throw       MatrixException If index is out of range.
+         *
+         * @param       i Unsigned index value to get reference of.
+         *
+         * @return      Type Reference to value at i index.
+         */
         type& at(unsigned i);
+
+        /**
+         * \brief           Returns a reference to the value at index
+         *              i,j.
+         *
+         * \details         Returns a reference to the value at index
+         *              i,j. At will throw MatrixException if the index
+         *              is out of range.
+         *
+         * @throw       MatrixException If index is out of range.
+         *
+         * @param       i Unsigned row index value to get reference of.
+         * @param       j Unsigned col index value to get reference of.
+         *
+         * @return      Type Reference to value at i,j index.
+         */
         type& at(unsigned i, unsigned j);
+
+        /**
+         * \brief           Returns a reference to the value at index
+         *              i.
+         *
+         * \details         Returns a reference to the value at index
+         *              i. This method will not throw any exceptions
+         *              due to overhead and at() method availability.
+         *
+         * @throw       MatrixException If index is out of range.
+         *
+         * @param       i Unsigned index value to get reference of.
+         *
+         * @return      Type Reference to value at i index.
+         */
         type& operator()(unsigned i);
+
+        /**
+         * \brief           Returns a reference to the value at index
+         *              i,j.
+         *
+         * \details         Returns a reference to the value at index
+         *              i,j. At will throw MatrixException if the index
+         *              is out of range.
+         *
+         * @throw       MatrixException If index is out of range.
+         *
+         * @param       i Unsigned row index value to get reference of.
+         * @param       j Unsigned col index value to get reference of.
+         *
+         * @return      Type Reference to value at i,j index.
+         */
         type& operator()(unsigned i ,unsigned j);
 
         // Operator Functions
@@ -401,21 +862,89 @@ namespace Propulsion {
         Matrix<type> operator*(const Matrix<type> &rhs);
         Matrix<type>& operator=(const Matrix<type>  &rhs);
 
-        // Functionality Functions
+        /**
+         * \brief           Zero pads this Matrix with specified
+         *              rows and cols. Zero can be accepted.
+         *
+         * \details         Zero pads this Matrix with specified
+         *              rows and cols. Zero can be provided as a
+         *              parameter, as it will not add it to the
+         *              matrix for the desired row/col.
+         *
+         * @param       rows Unsigned how many rows to zero pad.
+         * @param       cols Unsigned how many cols to zero pad.
+         */
         void pad(unsigned rows, unsigned cols);
-        void populateWithUniformDistribution(type lRange, type rRange);
-        Matrix<type> removeRow(unsigned rowToRem);
-        Matrix<type> removeCol(unsigned colToRem);
-        static Matrix<type> copy(Matrix<type>);
 
+        /**
+         * \brief           Populate Matrix with Uniform Distro Method.
+         *
+         * @param       lRange Type value to exclusive start from on left.
+         * @param       rRange Type value to exclusive start from on right.
+         *
+         * @return      None.
+         */
+        void populateWithUniformDistribution(type lRange, type rRange);
+
+        /**
+         * \brief           Removes the desired row from the Matrix.
+         *
+         * @param       rowToRem Unsigned index of row to remove.
+         *
+         * @return      None.
+         */
+        Matrix<type> removeRow(unsigned rowToRem);
+
+        /**
+         * \brief           Removes the desired col from the Matrix.
+         *
+         * @param       colToRem Unsigned index of col to remove.
+         *
+         * @return      None.
+         */
+        Matrix<type> removeCol(unsigned colToRem);
+
+        /**
+         * \brief           Deep copies the contents of param Matrix copyM
+         *              into the return Matrix.
+         *
+         * @return      Matrix copy of specified param.
+         */
+        static Matrix<type> copy(Matrix<type> copyM);
+
+        /**
+         * \brief           Generates a random real distrobution into Matrix
+         *              A with ranges lVal to rVal exclusive.
+         *
+         * @param       A Matrix to random fill with values.
+         * @param       lVal type value for left bounds exclusive.
+         * @param       rVal type value for right bounds exclusive.
+         *
+         * @return      None.
+         */
         static void randomRealDistribution(Matrix<type> &A, type lVal, type rVal);
+
+        /**
+         * \brief           Generates a random real distrobution into Matrix
+         *              A with ranges lVal to rVal exclusive.
+         *
+         * @param       A Matrix to random fill with values.
+         * @param       lVal type value for left bounds exclusive.
+         * @param       rVal type value for right bounds exclusive.
+         *
+         * @return      None.
+         */
         static void randomRealDistribution(std::shared_ptr<Matrix<type>> A, type lVal, type rVal);
 
-
+        /**
+         * \brief           Destructor!
+         */
         ~Matrix();
     private:
+        /// unique_ptr to type array. Has a custom deleter for paged memory and pinned memory arrays.
         std::unique_ptr<type[], void(*)(type*)> M; // Matrix Array as 1D.
 
+        /// rows, cols, and totalSize attributes.
         unsigned rows, cols, totalSize;
         MatrixMemType memT = MatrixMemType::pinned;
 

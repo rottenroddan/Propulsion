@@ -425,9 +425,9 @@ void Propulsion::Matrix<type>::T()
 }
 
 template <typename type>
-void Propulsion::Matrix<type>::add(const Matrix<type>& b, bool printTime)
+void Propulsion::Matrix<type>::add(const Matrix<type>& B, bool printTime)
 {
-    if(b.rows == this->rows && b.cols == this->cols)
+    if(B.rows == this->rows && B.cols == this->cols)
     {
         Propulsion::Matrix<type> temp(this->rows, this->cols, this->memT);
 
@@ -435,19 +435,19 @@ void Propulsion::Matrix<type>::add(const Matrix<type>& b, bool printTime)
         // Use CUDA to speed up the process.
         if(this->totalSize >= MATRIX_CUDA_ADD_DIFF_ELEM_SIZE)
         {
-            cudaAdd1DArraysWithStride(this->M.get(), b.M.get(), temp.M.get(), this->totalSize, printTime);
+            cudaAdd1DArraysWithStride(this->M.get(), B.M.get(), temp.M.get(), this->totalSize, printTime);
         }
         // Else just do it via HOST avx.
         else
         {
-            Propulsion::hostAdd1DArraysAVX256(this->M.get(), b.M.get(), temp.M.get(), this->totalSize, printTime);
+            Propulsion::hostAdd1DArraysAVX256(this->M.get(), B.M.get(), temp.M.get(), this->totalSize, printTime);
         }
 
         this->M = std::move(temp.M);
     }
     else
     {
-        std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  + ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")";
+        std::string err = "Matrix Size Mismatch, (" + std::to_string(this->rows) + ", " + std::to_string(this->cols) + ") vs. (" + std::to_string(B.rows) + ", " + std::to_string(B.cols) + ")";
         throw Propulsion::Matrix<type>::MatrixException(err.c_str(),
                                                         __FILE__, __LINE__, "add" , "Addition Requires all dimension sizes to be the same as the operation is element wise.");
     }
@@ -474,8 +474,8 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::addRowVector(Matrix<type> &b)
     else
     {
         // Error for add row vector
-        std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  +
-                          ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")" + ". Expected second Matrix to be ( 1, " + std::to_string(b.cols) + ")";
+        std::string err = "Matrix Size Mismatch, (" + std::to_string(this->rows) + ", " + std::to_string(this->cols) +
+                          ") vs. (" + std::to_string(b.rows) + ", " + std::to_string(b.cols) + ")" + ". Expected second Matrix to be ( 1, " + std::to_string(b.cols) + ")";
         throw Propulsion::Matrix<type>::MatrixException(err.c_str(),__FILE__, __LINE__, "addRowVector" ,
                                                         "addRowVector Requires that the argument be a row vector such that it is 1xn in DIM.");
     }
@@ -591,42 +591,42 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::addColVector(Matrix<type> &&b
 }
 
 template <typename type>
-void Propulsion::Matrix<type>::subtract(const Matrix<type> &b, bool printTime)
+void Propulsion::Matrix<type>::subtract(const Matrix<type> &B, bool printTime)
 {
-    if(b.rows == this->rows && b.cols == this->cols)
+    if(B.rows == this->rows && B.cols == this->cols)
     {
         Propulsion::Matrix<type> temp(this->rows, this->cols, this->memT);
         // Use CUDA to speed up the process.
         if(this->totalSize >= MATRIX_CUDA_ADD_DIFF_ELEM_SIZE)
         {
-            cudaSubtract1DArraysWithStride(this->M.get(), b.M.get(), temp.M.get(), this->rows * this->cols, printTime);
+            cudaSubtract1DArraysWithStride(this->M.get(), B.M.get(), temp.M.get(), this->rows * this->cols, printTime);
         }
             // Else just do it via HOST avx.
         else
         {
-            Propulsion::hostSubtract1DArraysAVX256(this->M.get(), b.M.get(), temp.M.get(), this->totalSize, printTime);
+            Propulsion::hostSubtract1DArraysAVX256(this->M.get(), B.M.get(), temp.M.get(), this->totalSize, printTime);
         }
 
         this->M = std::move(temp.M);
     }
     else
     {
-        std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  + ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")";
+        std::string err = "Matrix Size Mismatch, (" + std::to_string(this->rows) + ", " + std::to_string(this->cols) + ") vs. (" + std::to_string(B.rows) + ", " + std::to_string(B.cols) + ")";
         throw Propulsion::Matrix<type>::MatrixException(err.c_str(),
                                                         __FILE__, __LINE__, "subtract" , "Subtraction Requires all dimension sizes to be the same as the operation is element wise.");
     }
 }
 
 template<typename type>
-void Propulsion::Matrix<type>::cudaDotProduct(const Matrix<type> &b, bool printTime)
+void Propulsion::Matrix<type>::cudaDotProduct(const Matrix<type> &B, bool printTime)
 {
-    if(this->cols == b.rows) {
+    if(this->cols == B.rows) {
         // Create Matrix with A row size and b col size as nxm * mxk = nxk
-        Propulsion::Matrix<type> temp(this->getRowSize(), b.cols, this->memT, MatrixInitVal::zero);
+        Propulsion::Matrix<type> temp(this->getRowSize(), B.cols, this->memT, MatrixInitVal::zero);
 
         // Using CUDA from Propulsion to handle.
-        Propulsion::cudaDotProduct(this->getArray(), b.M.get(), temp.getArray(), this->getRowSize(), this->cols,
-                                  b.cols, printTime);
+        Propulsion::cudaDotProduct(this->getArray(), B.M.get(), temp.getArray(), this->getRowSize(), this->cols,
+                                   B.cols, printTime);
 
         // Move the pointer from Temp to M now.
         this->M = std::move(temp.M);
@@ -636,25 +636,25 @@ void Propulsion::Matrix<type>::cudaDotProduct(const Matrix<type> &b, bool printT
     }
     else
     {
-        std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  + ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")";
+        std::string err = "Matrix Size Mismatch, (" + std::to_string(this->rows) + ", " + std::to_string(this->cols) + ") vs. (" + std::to_string(B.rows) + ", " + std::to_string(B.cols) + ")";
         throw Propulsion::Matrix<type>::MatrixException(err.c_str(),
                                                         __FILE__, __LINE__, "cudaMultiplyMatrices" , "cudaMultiplyMatrices Requires the second dimension of matrix A match first dimension of matrix B");
     }
 }
 
 template <typename type>
-void Propulsion::Matrix<type>::dot(const Matrix<type> &b, bool printTime)
+void Propulsion::Matrix<type>::dot(const Matrix<type> &B, bool printTime)
 {
-    if(this->cols == b.rows)
+    if(this->cols == B.rows)
     {
         // Get size of new Matrix
-        unsigned newSize = this->rows * b.cols;
-        Propulsion::Matrix<type> multiplyArray(this->rows, b.cols, this->memT);
+        unsigned newSize = this->rows * B.cols;
+        Propulsion::Matrix<type> multiplyArray(this->rows, B.cols, this->memT);
 
         // Case its a 1x1.
-        if(this->totalSize == 1 && b.totalSize == 1)
+        if(this->totalSize == 1 && B.totalSize == 1)
         {
-            multiplyArray.M[0] = this->M[0] * b.M[0];
+            multiplyArray.M[0] = this->M[0] * B.M[0];
         }
         else {
             /*
@@ -669,49 +669,49 @@ void Propulsion::Matrix<type>::dot(const Matrix<type> &b, bool printTime)
             }
             }*/
 
-            Propulsion::hostDotProduct(this->M.get(), b.M.get(), multiplyArray.M.get(), this->rows, this->cols, b.cols, printTime);
+            Propulsion::hostDotProduct(this->M.get(), B.M.get(), multiplyArray.M.get(), this->rows, this->cols, B.cols, printTime);
         }
 
-        this->cols = b.cols;        // If you know, you know. AB: A * B is 2x3 - 3x3: New Matrix is 2(this rows)x3(b cols).
+        this->cols = B.cols;        // If you know, you know. AB: A * B is 2x3 - 3x3: New Matrix is 2(this rows)x3(b cols).
         this->totalSize = newSize;  // set the totalSize of this to the new size of the product matrix.
         this->M = std::move(multiplyArray.M);
     }
     else
     {
-        std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  + ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")";
+        std::string err = "Matrix Size Mismatch, (" + std::to_string(this->rows) + ", " + std::to_string(this->cols) + ") vs. (" + std::to_string(B.rows) + ", " + std::to_string(B.cols) + ")";
         throw Propulsion::Matrix<type>::MatrixException(err.c_str(),
                                                         __FILE__, __LINE__, "dot" , "dot Requires the second dimension of matrix A match first dimension of matrix B");
     }
 }
 
 template<typename type>
-void Propulsion::Matrix<type>::schurProduct(const Matrix<type> &b, bool printTime)
+void Propulsion::Matrix<type>::schurProduct(const Matrix<type> &B, bool printTime)
 {
-    if(this->rows == b.rows && this->cols == b.cols)
+    if(this->rows == B.rows && this->cols == B.cols)
     {
         Propulsion::Matrix<type> schurArray(this->rows, this->cols, this->memT);
 
         if (this->totalSize >= MATRIX_CUDA_ADD_DIFF_ELEM_SIZE)
         {
-            cudaSchurProduct(this->M.get(), b.M.get(), schurArray.M.get(), this->totalSize, printTime);
+            cudaSchurProduct(this->M.get(), B.M.get(), schurArray.M.get(), this->totalSize, printTime);
         }
         else
         {
-            hostSchurProduct(this->M.get(), b.M.get(), schurArray.M.get(), this->totalSize, printTime);
+            hostSchurProduct(this->M.get(), B.M.get(), schurArray.M.get(), this->totalSize, printTime);
         }
 
         this->M = std::move(schurArray.M);
     }
     else
     {
-        std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  + ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")";
+        std::string err = "Matrix Size Mismatch, (" + std::to_string(this->rows) + ", " + std::to_string(this->cols) + ") vs. (" + std::to_string(B.rows) + ", " + std::to_string(B.cols) + ")";
         throw Propulsion::Matrix<type>::MatrixException(err.c_str(),
                 __FILE__, __LINE__, "schurProduct" , "Schurs Product Requires all dimension sizes to be the same, as the proudct is element wise.");
     }
 }
 
 template<typename type>
-void Propulsion::Matrix<type>::multiply(type scalar)
+void Propulsion::Matrix<type>::multiply(type scalar) noexcept
 {
     for(unsigned i = 0; i < this->totalSize; i++)
     {
@@ -720,15 +720,15 @@ void Propulsion::Matrix<type>::multiply(type scalar)
 }
 
 template<typename type>
-void Propulsion::Matrix<type>::strassenMultiplication(const Matrix<type> &rb)
+void Propulsion::Matrix<type>::strassenMultiplication(const Matrix<type> &B)
 {
     // check if we can dot first.
-    if(this->cols == rb.rows)
+    if(this->cols == B.rows)
     {
         // get the log2(rows/cols) as we need to make a nxn matrix that is divisible into 4 partitions.
         double firstRowPowerOfTwo  = std::log2(this->rows);
         double firstColPowerOfTwo  = std::log2(this->cols); // This value is the same as b.cols, so we only need to check the Column.
-        double secondColPowerOfTwo = std::log2(rb.cols);
+        double secondColPowerOfTwo = std::log2(B.cols);
 
         double largestNPower = 0.0;
 
@@ -752,7 +752,7 @@ void Propulsion::Matrix<type>::strassenMultiplication(const Matrix<type> &rb)
 
         // the rows and cols of the matrices are now altered if they need to be.
         Propulsion::Matrix<type> A = *this;
-        Propulsion::Matrix<type> B = rb;
+        Propulsion::Matrix<type> B = B;
 
         // pad the matrices with zeros for Strassen Multiplication.
         A.pad(squareR, squareR);
@@ -796,7 +796,7 @@ void Propulsion::Matrix<type>::strassenMultiplication(const Matrix<type> &rb)
         C = C.mergeBelow(CB);
 
         // trim the matrix to the original pxn*mxq = pxq
-        for(unsigned i = 0; i < squareR - rb.cols; i++)
+        for(unsigned i = 0; i < squareR - B.cols; i++)
         {
             C = C.removeCol(b.cols);    // Remove Last col i times.
         }
@@ -810,7 +810,7 @@ void Propulsion::Matrix<type>::strassenMultiplication(const Matrix<type> &rb)
     }
     else
     {
-        std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  + ") vs. (" + std::to_string(rb.rows) +", " + std::to_string(rb.cols) + ")";
+        std::string err = "Matrix Size Mismatch, (" + std::to_string(this->rows) + ", " + std::to_string(this->cols) + ") vs. (" + std::to_string(B.rows) + ", " + std::to_string(B.cols) + ")";
         throw Propulsion::Matrix<type>::MatrixException(err.c_str(),
                                                         __FILE__, __LINE__, "dot" , "dot Requires the second dimension of matrix A match first dimension of matrix B");
     }
@@ -883,9 +883,9 @@ unsigned Propulsion::Matrix<type>::getTotalSize()
 }
 
 template <typename type>
-bool Propulsion::Matrix<type>::equalTo(const Matrix<type> &b)
+bool Propulsion::Matrix<type>::equalTo(const Matrix<type> &B)
 {
-    if( this->rows != b.rows || this->cols != b.cols)
+    if(this->rows != B.rows || this->cols != B.cols)
     {
         return false;
     }
@@ -893,7 +893,7 @@ bool Propulsion::Matrix<type>::equalTo(const Matrix<type> &b)
     {
         for(unsigned i = 0; i < this->totalSize; i++)
         {
-            if(this->M[i] != b.M[i])
+            if(this->M[i] != B.M[i])
             {
                 return false;
             }
@@ -1032,11 +1032,11 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::getRangeMatrix(unsigned rowSt
 }
 
 template<typename type>
-Propulsion::Matrix<type> Propulsion::Matrix<type>::mergeRight( Matrix<type> &b)
+Propulsion::Matrix<type> Propulsion::Matrix<type>::mergeRight( Matrix<type> &B)
 {
-    Propulsion::Matrix<type> ret(this->rows, this->cols + b.cols, this->memT);
+    Propulsion::Matrix<type> ret(this->rows, this->cols + B.cols, this->memT);
     // Check whether or not they have the same rows.
-    if(this->rows == b.rows)
+    if(this->rows == B.rows)
     {
         for(unsigned i = 0; i < ret.rows; i++)
         {
@@ -1048,7 +1048,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::mergeRight( Matrix<type> &b)
                 }
                 else
                 {
-                    ret.at(i,j) = b.at(i, j - this->cols);
+                    ret.at(i,j) = B.at(i, j - this->cols);
                 }
             }
         }
@@ -1059,11 +1059,11 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::mergeRight( Matrix<type> &b)
 }
 
 template<typename type>
-Propulsion::Matrix<type> Propulsion::Matrix<type>::mergeBelow( Matrix<type> &b)
+Propulsion::Matrix<type> Propulsion::Matrix<type>::mergeBelow( Matrix<type> &B)
 {
-    Propulsion::Matrix<type> ret(this->rows + b.rows, this->cols, this->memT);
+    Propulsion::Matrix<type> ret(this->rows + B.rows, this->cols, this->memT);
     // Check whether or not they have the same rows.
-    if(this->cols == b.cols)
+    if(this->cols == B.cols)
     {
         for(unsigned i = 0; i < ret.rows; i++)
         {
@@ -1075,7 +1075,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::mergeBelow( Matrix<type> &b)
                 }
                 else
                 {
-                    ret.at(i,j) = b.at(i - this->rows, j);
+                    ret.at(i,j) = B.at(i - this->rows, j);
                 }
             }
         }
@@ -1305,17 +1305,17 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::removeCol(unsigned int colToR
 
 
 template<typename type>
-Propulsion::Matrix<type> Propulsion::Matrix<type>::copy(Matrix<type> a)
+Propulsion::Matrix<type> Propulsion::Matrix<type>::copy(Matrix<type> copyM)
 {
-    Propulsion::Matrix<type> b(a.getRowSize(), a.getColSize(), a.memT);
+    Propulsion::Matrix<type> b(copyM.getRowSize(), copyM.getColSize(), copyM.memT);
 
-    if(a.totalSize > MATRIX_COPY_SIZE_DIFF) {
-        Propulsion::cudaCopyArray(a.M.get(), b.M.get(), a.getTotalSize());
+    if(copyM.totalSize > MATRIX_COPY_SIZE_DIFF) {
+        Propulsion::cudaCopyArray(copyM.M.get(), b.M.get(), copyM.getTotalSize());
         return b;
     }
     else
     {
-        b = a;
+        b = copyM;
         return b;
     }
 }

@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <Windows.h>
 
 #include <string>
 #include "Propulsion.cuh"
@@ -1009,7 +1010,6 @@ void tensorTests()
      * Exception Tests for at(...args) method.
      * -Test All Elements are accessible first
      */
-    /*
     try {
         int temp = T.at(0, 0, 0, 0);
         printExceptionTestResults("(Tensor.at should not throw an exception)", true, __FILE__, __LINE__);
@@ -1026,7 +1026,7 @@ void tensorTests()
 
     /*
      * Check that getTotalDims is functional.
-     *//*
+     */
     if(p.getTotalDims() == 5) {
         printExceptionTestResults("P should have 5 Dimensions: " + std::to_string( p.getTotalDims()), true, __FILE__, __LINE__);
     }
@@ -1037,7 +1037,7 @@ void tensorTests()
 
     /*
      * Check that getDims returns a deque/std container.
-     *//*
+     */
     if(p.getDims()[1] == 3) {
         printExceptionTestResults("(P Dim[1] should equal 3: " + std::to_string(p.getDims()[1]) + ")", true, __FILE__,
                                   __LINE__);
@@ -1050,7 +1050,7 @@ void tensorTests()
 
     /*
      * Check that dimension match on same Tensor(obv)
-     *//*
+     */
     if(p.checkAllDimensionsMatch(p))
     {
         printExceptionTestResults("(P Dims should match itself)", true, __FILE__, __LINE__);
@@ -1113,6 +1113,60 @@ void tensorTests()
     scalarT.print();
 
 
+    Propulsion::Tensor<int> rA = Propulsion::Tensor<int>(1,3,3);
+    Propulsion::Tensor<int> rB = Propulsion::Tensor<int>(1,3,3);
+    rA.populateWithRandomRealDistribution(-100000, 100000);
+    rB.populateWithRandomRealDistribution(-100000, 100000);
+
+    Propulsion::Tensor<int> rC = rA + rB;
+
+
+
+    rA.print();
+    rB.print();
+    rC.print();
+
+    Propulsion::Tensor<int> equalityA(4, 4, 4);
+    equalityA.populateWithRandomRealDistribution(-9, 9);
+
+    Propulsion::Tensor<int> equalityB = equalityA;
+
+    if(equalityA == equalityB) {
+        std::cout << "Wow" << std::endl;
+    }
+
+    equalityA.print();
+
+    equalityB.print();
+
+
+    unsigned long long rows, cols, tensors;
+    tensors = 1000;
+    rows = 800;
+    cols = 1600;
+
+    Propulsion::Tensor<int> aDot(tensors, rows, cols);
+    Propulsion::Tensor<int> bDot(tensors, cols, rows);
+
+    aDot.populateWithRandomRealDistribution(-4, 4);
+    bDot.populateWithRandomRealDistribution(-4, 4);
+
+
+
+
+
+
+    std::cout << "Dot Product Test, all 2 tensors are equal with their respective counter-parts before test." << std::endl;
+
+
+    //aDot.dotProduct(bDot, true);
+
+    //Propulsion::Tensor<int> YUYUY(203, 203, 203);
+
+    aDot.cudaDotProduct(bDot, true);
+
+    //int x = YUYUY(12,12,12);
+    //std::cout << x << std::endl;
 
 }
 
@@ -1147,9 +1201,9 @@ int main()
     secondMatrixTests();
 
 
-    /*
+
     Propulsion::Mandelbrot M(640,480);
-    M.simulate();*/
+    M.simulate();
 
     /*
     Propulsion::Matrix<double> R(1000,1000);
@@ -1167,6 +1221,8 @@ int main()
 
 
     tensorTests();
+
+
 
 
 
