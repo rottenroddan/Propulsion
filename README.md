@@ -16,3 +16,6 @@ Would be very cool to get a deep networking with Convolutional Layers.
 for this [here](https://rottenroddan.github.io/#projectsContainer). Below is a GIF of various iterations applied to the same area on the Mandelbrot set.
 
 ![](images/mandelbrotExample.gif)
+
+## Project Status
+Ongoing, but has slowed down since my final semester and other current projects. In and out of this project a lot due to other work.
