@@ -2,7 +2,7 @@
 
 Welcome user!
 
-Propulsion is a self project aimed getting a better understanding of Parallel Compute operations. In paticular, this repo is 
+Propulsion is a self project aimed at getting a better understanding of Parallel Compute operations. In paticular, this repo is 
 based mostly on numerical operations with CUDA and various multi-threaded algorithms. Feel free to make pull requests and 
 provide any insight. I am aware of Boost and cuBLAS and in no means is this meant to rival those libraries. This is just 
 a way for me to dip my toes in something I've never dabbled with before(in regards to CUDA). 
