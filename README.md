@@ -12,7 +12,7 @@ I would like to use this to build a neural network from scratch, since Propulsio
 from being highly usable. Currently working on the Tensor class, to allow images to be split for the color channels and N images and what not. 
 Would be very cool to get a deep networking with Convolutional Layers.
 
-**Completed** Mandelbrot set. Simple and move advanced implementations of the Mandelbrot set using AVX2 Optimizations and CUDA. You can see some of my results 
+**Completed** Mandelbrot set. Simple and more advanced implementations of the Mandelbrot set using AVX2 Optimizations and CUDA. You can see some of my results 
 for this [here](https://rottenroddan.github.io/#projectsContainer). Below is a GIF of various iterations applied to the same area on the Mandelbrot set.
 
 ![](images/mandelbrotExample.gif)
