@@ -19,3 +19,5 @@ for this [here](https://rottenroddan.github.io/#projectsContainer). Below is a G
 
 ## Project Status
 Ongoing, but has slowed down since my final semester and other current projects. In and out of this project a lot due to other work.
+
+As of April 1st~, my 2080ti can't run under full stress as it creates BOD, therefore there is going to be a delay in continuing this until I get a new GPU.
