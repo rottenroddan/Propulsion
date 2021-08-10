@@ -1283,21 +1283,6 @@ namespace Propulsion {
      */
     template <typename type,typename aType> static int vectorAngleBetweenVectors( type &,aType *, aType *, unsigned );
 
-
-    //    ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄        ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄         ▄
-    //  ▄█░░░░▌    ▐░░░░░░░░░░▌      ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌
-    // ▐░░▌▐░░▌    ▐░█▀▀▀▀▀▀▀█░▌     ▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌▐░▌       ▐░▌
-    //  ▀▀ ▐░░▌    ▐░▌       ▐░▌     ▐░▌       ▐░▌▐░▌       ▐░▌▐░▌       ▐░▌▐░▌       ▐░▌▐░▌       ▐░▌
-    //     ▐░░▌    ▐░▌       ▐░▌     ▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄█░▌
-    //     ▐░░▌    ▐░▌       ▐░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-    //     ▐░░▌    ▐░▌       ▐░▌     ▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀█░█▀▀ ▐░█▀▀▀▀█░█▀▀ ▐░█▀▀▀▀▀▀▀█░▌ ▀▀▀▀█░█▀▀▀▀
-    //     ▐░░▌    ▐░▌       ▐░▌     ▐░▌       ▐░▌▐░▌     ▐░▌  ▐░▌     ▐░▌  ▐░▌       ▐░▌     ▐░▌
-    // ▄▄▄▄█░░█▄▄▄ ▐░█▄▄▄▄▄▄▄█░▌     ▐░▌       ▐░▌▐░▌      ▐░▌ ▐░▌      ▐░▌ ▐░▌       ▐░▌     ▐░▌
-    //▐░░░░░░░░░░░▌▐░░░░░░░░░░▌      ▐░▌       ▐░▌▐░▌       ▐░▌▐░▌       ▐░▌▐░▌       ▐░▌     ▐░▌
-    // ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀        ▀         ▀  ▀         ▀  ▀         ▀  ▀         ▀       ▀
-    // 1D Array Functions
-
-
     /*
      * Function:    hostAdd1D
      */
@@ -1345,50 +1330,12 @@ namespace Propulsion {
     template <typename type> static void hostStencilSum1DArrays(type *, type *, unsigned, unsigned, bool = false);
     template <typename type> static void cudaStencilSum1DArrays(type *, type *, unsigned, unsigned, bool = false);
 
-
-    //  222222222222222         DDDDDDDDDDDDD
-    // 2:::::::::::::::22       D::::::::::::DDD
-    // 2::::::222222:::::2      D:::::::::::::::DD
-    // 2222222     2:::::2      DDD:::::DDDDD:::::D
-    //             2:::::2        D:::::D    D:::::D
-    //             2:::::2        D:::::D     D:::::D
-    //          2222::::2         D:::::D     D:::::D
-    //     22222::::::22          D:::::D     D:::::D
-    //   22::::::::222            D:::::D     D:::::D
-    //  2:::::22222               D:::::D     D:::::D
-    // 2:::::2                    D:::::D     D:::::D
-    // 2:::::2                    D:::::D    D:::::D
-    // 2:::::2       222222     DDD:::::DDDDD:::::D
-    // 2::::::2222222:::::2     D:::::::::::::::DD
-    // 2::::::::::::::::::2     D::::::::::::DDD
-    // 22222222222222222222     DDDDDDDDDDDDD        arrays....
-
     // 2D Addition Functions
     template <typename type> static void hostAdd2DMatrices(type *[], type *[], type *[], unsigned rSize, unsigned cSize);
     template <typename type> static void cudaAdd2DMatrices(type *[], type *[], type *[], unsigned rSize, unsigned cSize);
 
-
-
-
     template <typename type>
     static void cudaCopyArray(type *, type *, unsigned totalSize, bool printTime = false);
-
-
-
-    /* _____/\\\\\\\\\\___/\\\\\\\\\\\\____
-        ___/\\\///////\\\_\/\\\////////\\\__
-         __\///______/\\\__\/\\\______\//\\\_
-          _________/\\\//___\/\\\_______\/\\\_
-           ________\////\\\__\/\\\_______\/\\\_
-            ___________\//\\\_\/\\\_______\/\\\_
-             __/\\\______/\\\__\/\\\_______/\\\__
-              _\///\\\\\\\\\/___\/\\\\\\\\\\\\/___
-               ___\/////////_____\////////////_____ arrays... */
-
-
-
-
-
 };
 
 #include "Tensor.cuh"

@@ -1,0 +1,1 @@
+-nologo "C:\Users\steve\CLionProjects\Propulsion\cmake-build-release\CMakeFiles\3.17.5\CompilerIdCUDA\tmp\a_dlink.obj" "C:\Users\steve\CLionProjects\Propulsion\cmake-build-release\CMakeFiles\3.17.5\CompilerIdCUDA\tmp\CMakeCUDACompilerId.obj" -link -INCREMENTAL:NO   "/LIBPATH:C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.3/bin/../lib/x64"  cudadevrt.lib  cudart_static.lib

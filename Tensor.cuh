@@ -7,16 +7,16 @@
 
 
 /*
-     * Template packing verification making sure that the value(s) provided as
-     * the dims are in fact convertible to unsigned values.
-     *
-     * E.g. Tensor T(10, 4, 4)      // FINE
-     *      Tensor T(10, 4, 4.1, 3) // FINE but note that 4.1 is converted to unsigned int.
-     *      Tensor T(10, 3, 3, "a") // FAILS
-     *
-     * Uses:    Tensor
-     *          at
-     */
+ * Template packing verification making sure that the value(s) provided as
+ * the dims are in fact convertible to unsigned values.
+ *
+ * E.g. Tensor T(10, 4, 4)      // FINE
+ *      Tensor T(10, 4, 4.1, 3) // FINE but note that 4.1 is converted to unsigned int.
+ *      Tensor T(10, 3, 3, "a") // FAILS
+ *
+ * Uses:    Tensor
+ *          at
+ */
 template<typename... Ts>
 using AllUnsigned = typename
 std::enable_if<std::conjunction<std::is_convertible<Ts, unsigned long long>...>::value>::type;
@@ -28,7 +28,6 @@ private:
     std::deque<unsigned long long> dims;
 
     friend class Propulsion::Matrix<type>;
-
 public:
     /**
      * Class:        TensorException
@@ -81,19 +80,17 @@ public:
         // Unpack parameters.
         long long unsigned values[] = {(unsigned)args...};
 
-
         // Evaluate the values in values[] by placing them in dims container.
         for(auto v : values)
         {
             if(v == 0)
             {
-                std::string err = "Tensor Dimension Error: 0 is not a valid size for a dimension, maybe you mean 1?";
+                std::string err = "Tensor Dimension Error: 0 is not a valid size for a dimension.";
                 throw Propulsion::Tensor<type>::TensorException(err.c_str(), __FILE__, __LINE__,
                                                                 "Tensor", "Tensor Constructor requires that all dims be at least > 0");
             }
             this->dims.push_back(v);
         }
-
 
         // Now that the dims are stored, check if only 1 or 2 Dimensional Tensor
         if(this->dims.size() == 1)
@@ -589,7 +586,6 @@ public:
                 unsigned blocksY = std::ceil(( (double)this->dims[rowIdx]) / ( (double)block_dim.y) );
                 dim3 grid_dim(blocksX, blocksY);
 
-
                 /*
                  *
                  * Essentially, we calculate how much memory we have available to use.
@@ -624,7 +620,6 @@ public:
                     */
                     for(unsigned long long j = 0; j < matrixOffset; j++)
                     {
-
                         unsigned long long aOffset = j * aStreamSize;
                         unsigned long long bOffset = j * bStreamSize;
                         unsigned long long cOffset = j * cStreamSize;
@@ -1975,4 +1970,4 @@ public:
         }
         oStream << ")" << std::endl;
     }
-};                                                                                                                    
+};
