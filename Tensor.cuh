@@ -5,7 +5,6 @@
 #include "TensorHelpers.cu"
 
 
-
 /*
  * Template packing verification making sure that the value(s) provided as
  * the dims are in fact convertible to unsigned values.
@@ -14,7 +13,7 @@
  *      Tensor T(10, 4, 4.1, 3) // FINE but note that 4.1 is converted to unsigned int.
  *      Tensor T(10, 3, 3, "a") // FAILS
  *
- * Uses:    Tensor
+ * Uses:    Tensor - Constructors
  *          at
  */
 template<typename... Ts>
@@ -177,7 +176,7 @@ public:
      */
     Tensor(Tensor&& moveT)
     {
-        // deep copy moveT.dims
+        // set this dims to moveT.dims
         this->dims = moveT.dims;
 
         for (unsigned i = 0; i < moveT.tensor.size(); i++) {
@@ -213,7 +212,7 @@ public:
      */
     template<typename... Ts, typename = AllUnsigned<Ts...>>
     type& operator()(Ts const&... args) noexcept
-    {
+    {e
         // Unpack parameters.
         long long unsigned values[] = {(unsigned)args...};
         long long unsigned totalArgs = sizeof(values) / sizeof(unsigned long long);
@@ -479,8 +478,6 @@ public:
             }
         }
 
-
-
         if(printTime){
             std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
             float milliseconds = (float) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000;
@@ -588,7 +585,7 @@ public:
 
                 /*
                  *
-                 * Essentially, we calculate how much memory we have available to use.
+                 * We calculate how much memory we have available to use.
                  * Check the size of the TotalTensors in bytes. Calculate how many
                  * "passes" we need to perform. E.g. if the Total GPU is 11GB(as mine is),
                  * and the total size of the addition is 24.5GB, then we need at least
@@ -610,7 +607,6 @@ public:
                     gpuErrchk(cudaMalloc((void **) &dev_c, matrixOffset * cTotalMatrixSizeBytes));
 
                    /*
-                    * Look I know, this is difficult to read, but if you don't understand streams, you might now get this either.
                     * 1. Essentially I have broken down a stream into whole Matrix. I create a size array of the size of the whole
                     * tensors(this and B) as dev_a/dev_b respectively, then dev_c as the outcome array.
                     *
@@ -782,7 +778,6 @@ public:
                                                 "add", "Both Tensors must match all dimensions with one another, as its element wise addition.");
         }
 
-
         if(printTime){
             std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
             float milliseconds = (float) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000;
@@ -876,7 +871,7 @@ public:
             }
 
             /*
-             * Essentially, we calculate how much memory we have available to use.
+             * We calculate how much memory we have available to use.
              * Check the size of the TotalTensors in bytes. Calculate how many
              * "passes" we need to perform. E.g. if the Total GPU is 11GB(as mine is),
              * and the total size of the addition is 24.5GB, then we need at least
@@ -899,7 +894,6 @@ public:
                 //gpuErrchk( cudaMalloc((void**) &dev_c, matrixOffset * totalMatrixSizeBytes));
 
                 /*
-                 * Look I know, this is difficult to read, but if you don't understand streams, you might now get this either.
                  * 1. Essentially I have broken down a stream into whole Matrix. I create a size array of the size of the whole
                  * tensors(this and B) as dev_a/dev_b respectively, then dev_c as the outcome array.
                  *
@@ -1155,7 +1149,6 @@ public:
                 gpuErrchk( cudaMalloc((void**) &dev_b, matrixOffset * totalMatrixSizeBytes));
 
                 /*
-                 * Look I know, this is difficult to read, but if you don't understand streams, you might now get this either.
                  * 1. Essentially I have broken down a stream into whole Matrix. I create a size array of the size of the whole
                  * tensors(this and B) as dev_a/dev_b respectively, then dev_c as the outcome array.
                  *
@@ -1230,7 +1223,6 @@ public:
                           std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
                           " ms." << std::setw(TIME_WIDTH) << (this->getTotalSize() * sizeof(type)) / milliseconds / 1e6 << " GB/s" << std::endl;
             }
-
         }
         else
         {
@@ -1384,7 +1376,7 @@ public:
             }
 
             /*
-             * Essentially, we calculate how much memory we have available to use.
+             * We calculate how much memory we have available to use.
              * Check the size of the TotalTensors in bytes. Calculate how many
              * "passes" we need to perform. E.g. if the Total GPU is 11GB(as mine is),
              * and the total size of the addition is 24.5GB, then we need at least
@@ -1406,7 +1398,6 @@ public:
                 gpuErrchk( cudaMalloc((void**) &dev_b, matrixOffset * totalMatrixSizeBytes));
 
                 /*
-                 * Look I know, this is difficult to read, but if you don't understand streams, you might now get this either.
                  * 1. Essentially I have broken down a stream into whole Matrix. I create a size array of the size of the whole
                  * tensors(this and B) as dev_a/dev_b respectively, then dev_c as the outcome array.
                  *

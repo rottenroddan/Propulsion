@@ -6,9 +6,6 @@
 template<typename type>
 void Propulsion::Matrix<type>::generateMatrix(MatrixInitVal miv, MatrixInitType mit, type customVal, type *array)
 {
-    /*unsigned sz = this->cols * this->rows;
-    M = new type[sz];*/
-
     switch(miv)
     {
         // Case if requested a zero matrix
@@ -76,15 +73,10 @@ Propulsion::Matrix<type>::Matrix() : M(nullptr, freePagedMemory)
     this->rows = 1;
     this->cols = 1;
     this->totalSize = 1;
-    this->memT = MatrixMemType::paged;
+    this->memoryType = MatrixMemType::paged;
 
     // Allocate Paged Memory as no type was specified.
     createPagedMemory();
-
-    /*
-    type* _pinnedArr;
-    gpuErrchk(cudaMallocHost((void**)&_pinnedArr, this->totalSize * sizeof(type)));
-    this->M = std::unique_ptr<type[], void(*)(type*)>(_pinnedArr, freePinnedMemory);*/
 
     this->M[0] = 0;
 }
@@ -95,12 +87,12 @@ Propulsion::Matrix<type>::Matrix(const Matrix<type>& copyM) : M(nullptr, freePag
     this->rows = copyM.rows;
     this->cols = copyM.cols;
     this->totalSize = copyM.totalSize;
-    this->memT = copyM.memT;
+    this->memoryType = copyM.memoryType;
 
-    if(this->memT == Matrix<type>::MatrixMemType::pinned) {
+    if(this->memoryType == Matrix < type > ::MatrixMemType::pinned) {
         createPinnedMemory();
     }
-    else if(this->memT == Matrix<type>::MatrixMemType::paged){
+    else if(this->memoryType == Matrix < type > ::MatrixMemType::paged){
         createPagedMemory();
     }
 
@@ -117,12 +109,12 @@ Propulsion::Matrix<type>::Matrix(const Matrix<type>& copyM, MatrixMemType memTyp
     this->rows = copyM.rows;
     this->cols = copyM.cols;
     this->totalSize = copyM.totalSize;
-    this->memT = memType;
+    this->memoryType = memType;
 
-    if(this->memT == Matrix<type>::MatrixMemType::pinned) {
+    if(this->memoryType == Matrix < type > ::MatrixMemType::pinned) {
         createPinnedMemory();
     }
-    else if(this->memT == Matrix<type>::MatrixMemType::paged){
+    else if(this->memoryType == Matrix < type > ::MatrixMemType::paged){
         createPagedMemory();
     }
 
@@ -138,7 +130,7 @@ Propulsion::Matrix<type>::Matrix(Matrix<type>&& copyM) : M(nullptr, freePagedMem
     this->rows = copyM.rows;
     this->cols = copyM.cols;
     this->totalSize = copyM.totalSize;
-    this->memT = copyM.memT;
+    this->memoryType = copyM.memoryType;
     this->M = std::move(copyM.M);
 }
 
@@ -152,7 +144,7 @@ Propulsion::Matrix<type>::Matrix(unsigned rowAndColSize, Propulsion::Matrix<type
         this->rows = rowAndColSize;
         this->cols = rowAndColSize;
         this->totalSize = rowAndColSize*rowAndColSize;
-        this->memT = memType;
+        this->memoryType = memType;
 
         generateMatrix(miv, mit, customVal, nullptr);
     }
@@ -166,7 +158,7 @@ Propulsion::Matrix<type>::Matrix(unsigned rows, unsigned cols, Propulsion::Matri
         this->rows = rows;
         this->cols = cols;
         this->totalSize = rows*cols;
-        this->memT = memType;
+        this->memoryType = memType;
 
         generateMatrix(miv, mit, customVal, nullptr);
     }
@@ -180,7 +172,7 @@ Propulsion::Matrix<type>::Matrix(type *array, unsigned rowAndColSize, Propulsion
         this->rows = rowAndColSize;
         this->cols = rowAndColSize;
         this->totalSize = rowAndColSize*rowAndColSize;
-        this->memT = memType;
+        this->memoryType = memType;
 
         generateMatrix(MatrixInitVal::custom, MatrixInitType::def, NULL, array);
     }
@@ -194,7 +186,7 @@ Propulsion::Matrix<type>::Matrix(type *array, unsigned rows, unsigned cols, Prop
         this->rows = rows;
         this->cols = cols;
         this->totalSize = rows*cols;
-        this->memT = memType;
+        this->memoryType = memType;
 
         generateMatrix(miv, mit, customVal, array);
     }
@@ -202,10 +194,7 @@ Propulsion::Matrix<type>::Matrix(type *array, unsigned rows, unsigned cols, Prop
 
 template<typename type>
 Propulsion::Matrix<type>::~Matrix()
-{
-    //M.reset();
-    //this->M = nullptr;
-}
+{ }
 
 template<typename type>
 void Propulsion::Matrix<type>::print(std::ostream& ostream)
@@ -268,12 +257,12 @@ std::unique_ptr<type[], void(*)(type*)>  Propulsion::Matrix<type>::generateNullM
     unsigned sz = rowAndColSize;
     std::unique_ptr<type[], void(*)(type*)> r(nullptr, freePagedMemory);
 
-    if(this->memT == Matrix<type>::MatrixMemType::paged) {
+    if(this->memoryType == Matrix<type>::MatrixMemType::paged) {
         type* _pagedArr;
         _pagedArr = new type[sz];
         r = std::unique_ptr<type[], void(*)(type*)>(_pagedArr, freePagedMemory);
     }
-    else if(this->memT == Matrix<type>::MatrixMemType::pinned) {
+    else if(this->memoryType == Matrix<type>::MatrixMemType::pinned) {
         type* _pinnedArr;
         gpuErrchk(cudaMallocHost((void**)&_pinnedArr, sz * sizeof(type)));
         r = std::unique_ptr<type[], void(*)(type*)>(_pinnedArr, freePinnedMemory);
@@ -293,12 +282,12 @@ std::unique_ptr<type[], void(*)(type*)>  Propulsion::Matrix<type>::generateZeroM
     unsigned sz = rowAndColSize;
     std::unique_ptr<type[], void(*)(type*)> r(nullptr, freePagedMemory);
 
-    if(this->memT == Matrix<type>::MatrixMemType::paged) {
+    if(this->memoryType == Matrix<type>::MatrixMemType::paged) {
         type* _pagedArr;
         _pagedArr = new type[sz];
         r = std::unique_ptr<type[], void(*)(type*)>(_pagedArr, freePagedMemory);
     }
-    else if(this->memT == Matrix<type>::MatrixMemType::pinned) {
+    else if(this->memoryType == Matrix<type>::MatrixMemType::pinned) {
         type* _pinnedArr;
         gpuErrchk(cudaMallocHost((void**)&_pinnedArr, sz * sizeof(type)));
         r = std::unique_ptr<type[], void(*)(type*)>(_pinnedArr, freePinnedMemory);
@@ -318,12 +307,12 @@ std::unique_ptr<type[], void(*)(type*)>  Propulsion::Matrix<type>::generateDefau
     unsigned sz = rowAndColSize;
     std::unique_ptr<type[], void(*)(type*)> r(nullptr, freePagedMemory);
 
-    if(this->memT == Matrix<type>::MatrixMemType::paged) {
+    if(this->memoryType == Matrix<type>::MatrixMemType::paged) {
         type* _pagedArr;
         _pagedArr = new type[sz];
         r = std::unique_ptr<type[], void(*)(type*)>(_pagedArr, freePagedMemory);
     }
-    else if(this->memT == Matrix<type>::MatrixMemType::pinned) {
+    else if(this->memoryType == Matrix<type>::MatrixMemType::pinned) {
         type* _pinnedArr;
         gpuErrchk(cudaMallocHost((void**)&_pinnedArr, sz * sizeof(type)));
         r = std::unique_ptr<type[], void(*)(type*)>(_pinnedArr, freePinnedMemory);
@@ -353,12 +342,12 @@ std::unique_ptr<type[], void(*)(type*)> Propulsion::Matrix<type>::generateDiagon
     unsigned sz = rowAndColSize;
     std::unique_ptr<type[], void(*)(type*)> r(nullptr, freePagedMemory);
 
-    if(this->memT == Matrix<type>::MatrixMemType::paged) {
+    if(this->memoryType == Matrix<type>::MatrixMemType::paged) {
         type* _pagedArr;
         _pagedArr = new type[sz];
         r = std::unique_ptr<type[], void(*)(type*)>(_pagedArr, freePagedMemory);
     }
-    else if(this->memT == Matrix<type>::MatrixMemType::pinned) {
+    else if(this->memoryType == Matrix<type>::MatrixMemType::pinned) {
         type* _pinnedArr;
         gpuErrchk(cudaMallocHost((void**)&_pinnedArr, sz * sizeof(type)));
         r = std::unique_ptr<type[], void(*)(type*)>(_pinnedArr, freePinnedMemory);
@@ -406,7 +395,7 @@ template <typename type>
 void Propulsion::Matrix<type>::T()
 {
     // Generate new array as we need a new one.
-    Propulsion::Matrix<type> temp(this->rows, this->cols, this->memT);
+    Propulsion::Matrix<type> temp(this->rows, this->cols, this->memoryType);
 
     for(unsigned i = 0; i < this->rows; i++)
     {
@@ -429,7 +418,7 @@ void Propulsion::Matrix<type>::add(const Matrix<type>& B, bool printTime)
 {
     if(B.rows == this->rows && B.cols == this->cols)
     {
-        Propulsion::Matrix<type> temp(this->rows, this->cols, this->memT);
+        Propulsion::Matrix<type> temp(this->rows, this->cols, this->memoryType);
 
         //auto temp = std::make_unique<type[]>(this->rows * this->cols);
         // Use CUDA to speed up the process.
@@ -457,7 +446,7 @@ template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::addRowVector(Matrix<type> &b)
 {
     // Create return matrix. Initialized as 1x1 zero matrix.
-    Propulsion::Matrix<type> ret(this->rows, this->cols, this->memT);
+    Propulsion::Matrix<type> ret(this->rows, this->cols, this->memoryType);
 
     // Check if the rowVector can even be added to this. And check if b is a vector.
     if(this->cols == b.cols && b.rows == 1)
@@ -486,7 +475,7 @@ template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::addRowVector(Matrix<type> &&b)
 {
     // Create return matrix. Initialized as 1x1 zero matrix.
-    Propulsion::Matrix<type> ret(this->rows, this->cols, this->memT);
+    Propulsion::Matrix<type> ret(this->rows, this->cols, this->memoryType);
 
     // Check if the rowVector can even be added to this. And check if b is a vector.
     if(this->cols == b.cols && b.rows == 1)
@@ -522,7 +511,7 @@ template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::addColVector(Matrix<type> &b)
 {
     // Create return matrix. Initialized as 1x1 zero matrix.
-    Propulsion::Matrix<type> ret(this->rows, this->cols, this->memT);
+    Propulsion::Matrix<type> ret(this->rows, this->cols, this->memoryType);
 
     // Check if the colVector can even be added to the matrix.
     if(this->rows == b.rows && b.cols == 1)
@@ -558,7 +547,7 @@ template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::addColVector(Matrix<type> &&b)
 {
     // Create return matrix. Initialized as 1x1 zero matrix.
-    Propulsion::Matrix<type> ret(this->rows, this->cols, this->memT);
+    Propulsion::Matrix<type> ret(this->rows, this->cols, this->memoryType);
 
     // Check if the colVector can even be added to the matrix.
     if(this->rows == b.rows && b.cols == 1)
@@ -595,7 +584,7 @@ void Propulsion::Matrix<type>::subtract(const Matrix<type> &B, bool printTime)
 {
     if(B.rows == this->rows && B.cols == this->cols)
     {
-        Propulsion::Matrix<type> temp(this->rows, this->cols, this->memT);
+        Propulsion::Matrix<type> temp(this->rows, this->cols, this->memoryType);
         // Use CUDA to speed up the process.
         if(this->totalSize >= MATRIX_CUDA_ADD_DIFF_ELEM_SIZE)
         {
@@ -622,7 +611,7 @@ void Propulsion::Matrix<type>::cudaDotProduct(const Matrix<type> &B, bool printT
 {
     if(this->cols == B.rows) {
         // Create Matrix with A row size and b col size as nxm * mxk = nxk
-        Propulsion::Matrix<type> temp(this->getRowSize(), B.cols, this->memT, MatrixInitVal::zero);
+        Propulsion::Matrix<type> temp(this->getRowSize(), B.cols, this->memoryType, MatrixInitVal::zero);
 
         // Using CUDA from Propulsion to handle.
         Propulsion::cudaDotProduct(this->getArray(), B.M.get(), temp.getArray(), this->getRowSize(), this->cols,
@@ -649,7 +638,7 @@ void Propulsion::Matrix<type>::dot(const Matrix<type> &B, bool printTime)
     {
         // Get size of new Matrix
         unsigned newSize = this->rows * B.cols;
-        Propulsion::Matrix<type> multiplyArray(this->rows, B.cols, this->memT);
+        Propulsion::Matrix<type> multiplyArray(this->rows, B.cols, this->memoryType);
 
         // Case its a 1x1.
         if(this->totalSize == 1 && B.totalSize == 1)
@@ -689,7 +678,7 @@ void Propulsion::Matrix<type>::schurProduct(const Matrix<type> &B, bool printTim
 {
     if(this->rows == B.rows && this->cols == B.cols)
     {
-        Propulsion::Matrix<type> schurArray(this->rows, this->cols, this->memT);
+        Propulsion::Matrix<type> schurArray(this->rows, this->cols, this->memoryType);
 
         if (this->totalSize >= MATRIX_CUDA_ADD_DIFF_ELEM_SIZE)
         {
@@ -983,7 +972,7 @@ bool Propulsion::Matrix<type>::isLowerTriangular()
 template <typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::getRowMatrix(unsigned int row)
 {
-    Propulsion::Matrix<type> ret(1, this->cols, this->memT);
+    Propulsion::Matrix<type> ret(1, this->cols, this->memoryType);
     // Check if in range.
     if(row < this->rows) {
         for (unsigned i = 0; i < ret.cols; i++) {
@@ -997,7 +986,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::getRowMatrix(unsigned int row
 template <typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::getColMatrix(unsigned int col)
 {
-    Propulsion::Matrix<type> ret(this->rows, 1, this->memT);
+    Propulsion::Matrix<type> ret(this->rows, 1, this->memoryType);
     // Check if in range.
     if(col < this->cols) {
         for (unsigned i = 0; i < ret.rows; i++) {
@@ -1011,7 +1000,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::getColMatrix(unsigned int col
 template <typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::getRangeMatrix(unsigned rowStart, unsigned rowEnd, unsigned colStart, unsigned colEnd)
 {
-    Propulsion::Matrix<type> ret(rowEnd - rowStart + 1, colEnd - colStart + 1, this->memT);
+    Propulsion::Matrix<type> ret(rowEnd - rowStart + 1, colEnd - colStart + 1, this->memoryType);
     // Check if in range.
     if(rowStart <= rowEnd && rowEnd < this->rows && colStart <= colEnd && colEnd < this->cols)
     {
@@ -1034,7 +1023,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::getRangeMatrix(unsigned rowSt
 template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::mergeRight( Matrix<type> &B)
 {
-    Propulsion::Matrix<type> ret(this->rows, this->cols + B.cols, this->memT);
+    Propulsion::Matrix<type> ret(this->rows, this->cols + B.cols, this->memoryType);
     // Check whether or not they have the same rows.
     if(this->rows == B.rows)
     {
@@ -1061,7 +1050,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::mergeRight( Matrix<type> &B)
 template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::mergeBelow( Matrix<type> &B)
 {
-    Propulsion::Matrix<type> ret(this->rows + B.rows, this->cols, this->memT);
+    Propulsion::Matrix<type> ret(this->rows + B.rows, this->cols, this->memoryType);
     // Check whether or not they have the same rows.
     if(this->cols == B.cols)
     {
@@ -1129,7 +1118,7 @@ type& Propulsion::Matrix<type>::operator()(unsigned i, unsigned j)
 template <typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::operator+(Matrix<type> &rhs)
 {
-    Propulsion::Matrix<type> ret(this->rows, this->cols, this->memT);
+    Propulsion::Matrix<type> ret(this->rows, this->cols, this->memoryType);
     if(rows == rhs.rows && cols == rhs.cols)
     {
         hostAdd1DArraysAVX256(this->getArray(), rhs.getArray(), ret.getArray(),this->getTotalSize());
@@ -1145,7 +1134,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::operator+(Matrix<type> &rhs)
 template <typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::operator-(Matrix<type> &rhs)
 {
-    Propulsion::Matrix<type> ret(this->rows, this->cols, this->memT);
+    Propulsion::Matrix<type> ret(this->rows, this->cols, this->memoryType);
     if(rows == rhs.rows && cols == rhs.cols)
     {
         hostSubtract1DArraysAVX256(this->getArray(), rhs.getArray(), ret.getArray(), this->getTotalSize());
@@ -1235,8 +1224,8 @@ void Propulsion::Matrix<type>::pad(unsigned rows, unsigned cols)
         unsigned colsToAdd = cols - this->cols;
 
 
-        Propulsion::Matrix<type> bottomRows(rowsToAdd, this->cols, this->memT);
-        Propulsion::Matrix<type> rightCols(rows, colsToAdd, this->memT);
+        Propulsion::Matrix<type> bottomRows(rowsToAdd, this->cols, this->memoryType);
+        Propulsion::Matrix<type> rightCols(rows, colsToAdd, this->memoryType);
 
 
         if(this->rows < rows)
@@ -1260,7 +1249,7 @@ void Propulsion::Matrix<type>::populateWithUniformDistribution(type lRange, type
 
 template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::removeRow(unsigned int rowToRem) {
-    Propulsion::Matrix<type> ret(this->rows - 1, this->cols, this->memT);
+    Propulsion::Matrix<type> ret(this->rows - 1, this->cols, this->memoryType);
     unsigned rIter = 0;
     if(rowToRem < this->rows)
     {
@@ -1282,7 +1271,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::removeRow(unsigned int rowToR
 
 template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::removeCol(unsigned int colToRem) {
-    Propulsion::Matrix<type> ret(this->rows, this->cols - 1, this->memT);
+    Propulsion::Matrix<type> ret(this->rows, this->cols - 1, this->memoryType);
     unsigned cIter = 0;
     if(colToRem < this->cols)
     {
@@ -1307,7 +1296,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::removeCol(unsigned int colToR
 template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::copy(Matrix<type> copyM)
 {
-    Propulsion::Matrix<type> b(copyM.getRowSize(), copyM.getColSize(), copyM.memT);
+    Propulsion::Matrix<type> b(copyM.getRowSize(), copyM.getColSize(), copyM.memoryType);
 
     if(copyM.totalSize > MATRIX_COPY_SIZE_DIFF) {
         Propulsion::cudaCopyArray(copyM.M.get(), b.M.get(), copyM.getTotalSize());
@@ -1351,7 +1340,7 @@ template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::sumRows(Matrix<type> &&A)
 {
     // create return object, give it size of the rows from A, 1 for columns.
-    Propulsion::Matrix<type> ret(A.rows, 1, A.memT);
+    Propulsion::Matrix<type> ret(A.rows, 1, A.memoryType);
 
     for(unsigned i = 0; i < A.rows; i++)
     {
@@ -1376,7 +1365,7 @@ template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::sumRows(Matrix<type> &A)
 {
     // create return object, give it size of the rows from A, 1 for columns.
-    Propulsion::Matrix<type> ret(A.rows, 1, A.memT);
+    Propulsion::Matrix<type> ret(A.rows, 1, A.memoryType);
 
     for(unsigned i = 0; i < A.rows; i++)
     {
@@ -1401,7 +1390,7 @@ template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::sumCols(Matrix<type> &&A)
 {
     // create return object, give it size of the rows from A, 1 for rows.
-    Propulsion::Matrix<type> ret(1, A.cols, A.memT);
+    Propulsion::Matrix<type> ret(1, A.cols, A.memoryType);
 
     for(unsigned j = 0; j < A.cols; j++)
     {
@@ -1426,7 +1415,7 @@ template<typename type>
 Propulsion::Matrix<type> Propulsion::Matrix<type>::sumCols(Matrix<type> &A)
 {
     // create return object, give it size of the rows from A, 1 for columns.
-    Propulsion::Matrix<type> ret(1, A.cols, A.memT);
+    Propulsion::Matrix<type> ret(1, A.cols, A.memoryType);
 
     for(unsigned j = 0; j < A.cols; j++)
     {

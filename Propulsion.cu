@@ -71,8 +71,11 @@ void Propulsion::cudaAdd1DArrays(type *a, type *b, type *c, unsigned cols, bool 
     gpuErrchk(cudaEventRecord(start));
     deviceAddMatrices<<<block, MAX_THREADS>>>(dev_a, dev_b, dev_c, cols);
 
+    // Check for error.
     gpuErrchk(cudaPeekAtLastError());
-    gpuErrchk(cudaDeviceSynchronize()); // Synchronize CUDA with HOST. Wait for Device.
+
+    // Synchronize CUDA with HOST. Wait for Device.
+    gpuErrchk(cudaDeviceSynchronize());
 
     gpuErrchk(cudaEventRecord(stop));
 
@@ -104,13 +107,6 @@ void Propulsion::cudaAdd1DArrays(type *a, type *b, type *c, unsigned cols, bool 
 
 template <typename type> __global__ void deviceAdd1DMatricesWithStride(type *dev_a, type *dev_b, type *dev_c, unsigned cols)
 {
-    /*for(int i = blockIdx.x * blockDim.x + threadIdx.x;
-        i < C;
-        i += blockDim.x * gridDim.x)
-    {
-        dev_c[i] = dev_a[i] + dev_b[i];
-    }*/
-
     int tID = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
     for(int i = tID; i < cols; i += stride)

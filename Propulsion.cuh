@@ -946,7 +946,7 @@ namespace Propulsion {
 
         /// rows, cols, and totalSize attributes.
         unsigned rows, cols, totalSize;
-        MatrixMemType memT = MatrixMemType::pinned;
+        MatrixMemType memoryType = MatrixMemType::pinned;
 
 
         void generateMatrix(MatrixInitVal, MatrixInitType, type customVal, type * = nullptr);
@@ -988,14 +988,9 @@ namespace Propulsion {
         double zoomFactor;
 
         bool redraw = false;
-        bool calculateWithCUDA = true;
-
 
         WNDCLASSA* windowClass;
         HWND hwnd = nullptr;
-
-
-        std::mutex mandelMutex;
 
         void paintWindow(int device = 0);
         void zoomInOnCursor();

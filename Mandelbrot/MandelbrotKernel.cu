@@ -28,14 +28,7 @@ __global__ void mandelbrotCalculate(int *d_output, int *d_colorPicker, int wPixe
             n++;
         }
 
-        if(n == maxIterations)
-        {
-            d_output[tRow * wPixels + tCol] = d_colorPicker[n-1];
-        }
-        else
-        {
-            d_output[tRow * wPixels + tCol] = d_colorPicker[n-1];
-        }
+        d_output[tRow * wPixels + tCol] = d_colorPicker[n-1];
     }
 }
 
@@ -44,7 +37,6 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
 {
     // Create a matrix with the dimensions of the window
     std::unique_ptr<Propulsion::Matrix<int>> Mandelset( new Matrix<int>(hPixels, wPixels));
-
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -72,9 +64,7 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
                                                  topBound, bottomBound, maxIterations);
 
     cudaEventRecord(stop);
-
     cudaEventSynchronize(stop);
-
     cudaMemcpy(Mandelset->getArray(), dev_output, wPixels * sizeof(int) * hPixels, cudaMemcpyDeviceToHost);
 
 
@@ -84,19 +74,15 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
     cudaFree(dev_output);
     cudaFree(dev_colorPicker);
 
-
     std::cout << std::left << std::setw(TIME_FORMAT) << " CUDA:  Mandelbrot Calculation took: " <<
               std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
               " ms." << std::setw(TIME_WIDTH) << std::endl;
-
-
 
     /*
      * END OF CUDA STUFF
      */
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
-
 
     return Mandelset;
 }
