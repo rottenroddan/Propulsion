@@ -1,7 +1,7 @@
 //
 // Created by steve on 3/9/2021.
 //
-#include "Propulsion.cuh"
+#include "../Propulsion.cuh"
 #include "TensorHelpers.cu"
 
 
@@ -212,7 +212,7 @@ public:
      */
     template<typename... Ts, typename = AllUnsigned<Ts...>>
     type& operator()(Ts const&... args) noexcept
-    {e
+    {
         // Unpack parameters.
         long long unsigned values[] = {(unsigned)args...};
         long long unsigned totalArgs = sizeof(values) / sizeof(unsigned long long);
@@ -549,7 +549,7 @@ public:
                     std::cout << "[cudaAdd] Total Bytes Requested: " << totalTensorsSizeBytes << std::endl;
                     std::cout << "[cudaAdd] Total Free Bytes:      " << free_bytes << std::endl;
                     std::cout << "[cudaAdd] Total GPU Bytes:       " << total_bytes << std::endl;
-                    std::cout << "[cudaAdd] Total passes:          " << passes << std::endl;
+                    std::cout << "[cudaAdd] Total Passes:          " << passes << std::endl;
                     std::cout << "[cudaAdd] Matrix Offset:         " << matrixOffset << std::endl;
                     std::cout << "[cudaAdd] Kernel Byte Size:      " << totalKernelMemorySizeBytes << std::endl;
                     std::cout << "[cudaAdd] Remaining Matrices:    " << remainingMatrices << std::endl;
@@ -848,7 +848,7 @@ public:
                 std::cout << "[cudaAdd] Total Bytes Requested: " << totalTensorsSizeBytes << std::endl;
                 std::cout << "[cudaAdd] Total Free Bytes:      " << free_bytes << std::endl;
                 std::cout << "[cudaAdd] Total GPU Bytes:       " << total_bytes << std::endl;
-                std::cout << "[cudaAdd] Total passes:          " << passes << std::endl;
+                std::cout << "[cudaAdd] Total Passes:          " << passes << std::endl;
                 std::cout << "[cudaAdd] Matrix Offset:         " << matrixOffset << std::endl;
                 std::cout << "[cudaAdd] Kernel Byte Size:      " << totalKernelMemorySizeBytes << std::endl;
                 std::cout << "[cudaAdd] Remaining Matrices:    " << remainingMatrices << std::endl;
@@ -1104,7 +1104,7 @@ public:
                 std::cout << "[cudaSubtract] Total Bytes Requested: " << totalTensorsSizeBytes << std::endl;
                 std::cout << "[cudaSubtract] Total Free Bytes:      " << free_bytes << std::endl;
                 std::cout << "[cudaSubtract] Total GPU Bytes:       " << total_bytes << std::endl;
-                std::cout << "[cudaSubtract] Total passes:          " << passes << std::endl;
+                std::cout << "[cudaSubtract] Total Passes:          " << passes << std::endl;
                 std::cout << "[cudaSubtract] Matrix Offset:         " << matrixOffset << std::endl;
                 std::cout << "[cudaSubtract] Kernel Byte Size:      " << totalKernelMemorySizeBytes << std::endl;
                 std::cout << "[cudaSubtract] Remaining Matrices:    " << remainingMatrices << std::endl;
@@ -1353,7 +1353,7 @@ public:
                 std::cout << "[cudaSubtract] Total Bytes Requested: " << totalTensorsSizeBytes << std::endl;
                 std::cout << "[cudaSubtract] Total Free Bytes:      " << free_bytes << std::endl;
                 std::cout << "[cudaSubtract] Total GPU Bytes:       " << total_bytes << std::endl;
-                std::cout << "[cudaSubtract] Total passes:          " << passes << std::endl;
+                std::cout << "[cudaSubtract] Total Passes:          " << passes << std::endl;
                 std::cout << "[cudaSubtract] Matrix Offset:         " << matrixOffset << std::endl;
                 std::cout << "[cudaSubtract] Kernel Byte Size:      " << totalKernelMemorySizeBytes << std::endl;
                 std::cout << "[cudaSubtract] Remaining Matrices:    " << remainingMatrices << std::endl;
@@ -1534,7 +1534,7 @@ public:
             std::cout << "[cudaSubtract] Total Bytes Requested: " << totalTensorsSizeBytes << std::endl;
             std::cout << "[cudaSubtract] Total Free Bytes:      " << free_bytes << std::endl;
             std::cout << "[cudaSubtract] Total GPU Bytes:       " << total_bytes << std::endl;
-            std::cout << "[cudaSubtract] Total passes:          " << passes << std::endl;
+            std::cout << "[cudaSubtract] Total Passes:          " << passes << std::endl;
             std::cout << "[cudaSubtract] Matrix Offset:         " << matrixOffset << std::endl;
             std::cout << "[cudaSubtract] Kernel Byte Size:      " << totalKernelMemorySizeBytes << std::endl;
             std::cout << "[cudaSubtract] Remaining Matrices:    " << remainingMatrices << std::endl;
@@ -1577,7 +1577,6 @@ public:
 
 
             /*
-             * Look I know, this is difficult to read, but if you don't understand streams, you might now get this either.
              * 1. Essentially I have broken down a stream into whole Matrix. I create a size array of the size of the whole
              * tensors(this and B) as dev_a/dev_b respectively, then dev_c as the outcome array.
              *

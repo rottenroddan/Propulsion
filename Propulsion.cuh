@@ -1333,7 +1333,7 @@ namespace Propulsion {
     static void cudaCopyArray(type *, type *, unsigned totalSize, bool printTime = false);
 };
 
-#include "Tensor.cuh"
+#include "Tensor/Tensor.cuh"
 #include "ANN/ArtificialNeuralNetwork.cu"
 #include "ANN/ActivationReLU.cu"
 #include "ANN/ActivationSigmoid.cu"
@@ -1342,8 +1342,8 @@ namespace Propulsion {
 #include "ANN/LossFunctions.cu"
 #include "Mandelbrot/Mandelbrot.cu"
 #include "Mandelbrot/MandelbrotKernel.cu"
-#include "Matrix.cu"
-#include "MatrixNumerical.cu"
+#include "Matrix/Matrix.cu"
+#include "Matrix/MatrixNumerical.cu"
 #include "PropulsionVectorOperations.cu"        // Vector Operations
 #include "Propulsion.cu"                        // One Dimensional Matrix Operations
 

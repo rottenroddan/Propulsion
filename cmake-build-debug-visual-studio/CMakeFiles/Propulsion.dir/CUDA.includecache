@@ -111,8 +111,8 @@ cuda_runtime.h
 C:/Users/steve/CLionProjects/Propulsion/cuda_runtime.h
 device_launch_parameters.h
 C:/Users/steve/CLionProjects/Propulsion/device_launch_parameters.h
-Tensor.cuh
-C:/Users/steve/CLionProjects/Propulsion/Tensor.cuh
+Tensor/Tensor.cuh
+C:/Users/steve/CLionProjects/Propulsion/Tensor/Tensor.cuh
 ANN/ArtificialNeuralNetwork.cu
 C:/Users/steve/CLionProjects/Propulsion/ANN/ArtificialNeuralNetwork.cu
 ANN/ActivationReLU.cu
@@ -142,13 +142,13 @@ C:/Users/steve/CLionProjects/Propulsion/PropulsionVectorOperations.cu
 Propulsion.cuh
 C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
 
-C:/Users/steve/CLionProjects/Propulsion/Tensor.cuh
-Propulsion.cuh
+C:/Users/steve/CLionProjects/Propulsion/Tensor/Tensor.cuh
+../Propulsion.cuh
 C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
 TensorHelpers.cu
-C:/Users/steve/CLionProjects/Propulsion/TensorHelpers.cu
+C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorHelpers.cu
 
-C:/Users/steve/CLionProjects/Propulsion/TensorHelpers.cu
+C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorHelpers.cu
 deque
 -
 iostream

@@ -14,7 +14,7 @@ CMakeFiles\Propulsion.dir\main.cu.obj: ..\MatrixNumerical.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Propulsion.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Propulsion.cuh
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\PropulsionVectorOperations.cu
-CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor.cuh
-CMakeFiles\Propulsion.dir\main.cu.obj: ..\TensorHelpers.cu
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\Tensor.cuh
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorHelpers.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\main.cu
 

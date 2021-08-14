@@ -1,7 +1,7 @@
 //
 // Created by steve on 7/31/2020.
 //
-#include "Propulsion.cuh"
+#include "../Propulsion.cuh"
 
 template<typename type>
 void Propulsion::Matrix<type>::generateMatrix(MatrixInitVal miv, MatrixInitType mit, type customVal, type *array)
