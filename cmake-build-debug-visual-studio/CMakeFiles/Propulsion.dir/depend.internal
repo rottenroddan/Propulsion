@@ -19,6 +19,7 @@ CMakeFiles/Propulsion.dir/main.cu.obj
  C:/Users/steve/CLionProjects/Propulsion/PropulsionVectorOperations.cu
  C:/Users/steve/CLionProjects/Propulsion/Tensor/Tensor.cuh
  C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorArithmeticOperations.cu
+ C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorCopy.cu
  C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorDotProduct.cu
  C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorHelpers.cu
  C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorVectorOperations.cu

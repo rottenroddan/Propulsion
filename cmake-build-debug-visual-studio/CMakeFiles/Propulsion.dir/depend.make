@@ -18,6 +18,7 @@ CMakeFiles\Propulsion.dir\main.cu.obj: ..\Propulsion.cuh
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\PropulsionVectorOperations.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\Tensor.cuh
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorArithmeticOperations.cu
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorCopy.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorDotProduct.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorHelpers.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorVectorOperations.cu

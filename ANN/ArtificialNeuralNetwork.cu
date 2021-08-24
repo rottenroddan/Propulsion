@@ -39,21 +39,23 @@ void Propulsion::ArtificialNeuralNetwork::test() {
                   0.0, 0.0, 1.0};
 
     Tensor<double> input(input_Arr, 1, 5, 3);
-    Tensor<double> bias(bias_arr, 1, 2);
+    Tensor<double> bias(bias_arr, 1, 3);
+    Tensor<double> x(1,1);
 
-    input.test();
+
+    //input.test();
     try {
-        input.addRowVector(bias);
+        x = Tensor<double>::addRowVector(input, bias);
     }
     catch (std::exception &e)
     {
-        std::cout << e.what() << std::endl;
+
     }
-    input.print();
+    x.print();
 
     auto firstLayer = Dense(5, 5);
 
-    firstLayer.printWeights();
+    //firstLayer.printWeights();
 
     // input stored as a matrix.
     /*

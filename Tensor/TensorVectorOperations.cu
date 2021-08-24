@@ -60,3 +60,11 @@ void Propulsion::Tensor<type>::addRowVector(Matrix <type> &rowVector)
         }
     }
 }
+
+template<typename type>
+Propulsion::Tensor<type>& Propulsion::Tensor<type>::addRowVector(Tensor <type> &A, Tensor <type> &rowVector)
+{
+    Tensor<type> retTensor = A;
+    A.addRowVector(rowVector);
+    return A;
+}

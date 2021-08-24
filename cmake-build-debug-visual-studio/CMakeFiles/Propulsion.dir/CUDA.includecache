@@ -161,12 +161,16 @@ TensorHelpers.cu
 C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorHelpers.cu
 TensorArithmeticOperations.cu
 C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorArithmeticOperations.cu
+TensorCopy.cu
+C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorCopy.cu
 TensorDotProduct.cu
 C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorDotProduct.cu
 TensorVectorOperations.cu
 C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorVectorOperations.cu
 
 C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorArithmeticOperations.cu
+
+C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorCopy.cu
 
 C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorDotProduct.cu
 

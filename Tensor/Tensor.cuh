@@ -769,6 +769,11 @@ public:
     Tensor<type> operator*(Tensor<type> &rhs);
 
     /**
+     *
+     */
+     Tensor<type>& operator=(const Tensor<type> &rhs);
+
+    /**
      * \brief           Checks if the tensors are equal to one
      *              another element wise.
      *
@@ -860,6 +865,31 @@ public:
      * @param       rowVector Matrix object being treated as a row vector.
      */
     void addRowVector(Matrix<type> &rowVector);
+
+    /**
+     * \brief           Takes in two parameters. One is the Tensor object
+     *              as a standard Tensor, where the second Parameter is a
+     *              Tensor Object that is in shape of a row vector.
+     *
+     * \details         Excepts two parameters as Tensors. Treats the first
+     *              parameter as a standard Tensor object, while the second
+     *              parameter is treated as a row vector. Creates a new Tensor
+     *              object that is returned to the caller.
+     *
+     * \example     Tensor<double> input(input_Arr, 1, 5, 3);               <br>
+     *              Tensor<double> bias(bias_arr, 1, 3);                    <br>
+     *              auto x = Tensor<double>::addRowVector(input, bias);     <br>
+     *
+     * \throws      TensorException if the the Tensor Row Vector Parameter has more than one dimension above 2 Dims.
+     * \throws      TensorException if the row dimension is not a value of 1, or if the column dimension does not match
+     *              that of this tensors column dim.
+     *
+     * @param       A Tensor that is of any size. The copied and modified value.
+     * @param       rowVector Tensor object being treated as a row vector.
+     *
+     * @returns     A Tensor reference of the Tensor object rowVector added with.
+     */
+     static Tensor<type>& addRowVector(Tensor<type> &A, Tensor<type> &rowVector);
 
     /**
      * \brief           Returns the total amount of dimensions from the dims deque.
@@ -1049,5 +1079,6 @@ public:
 
 
 #include "TensorArithmeticOperations.cu"
+#include "TensorCopy.cu"
 #include "TensorDotProduct.cu"
 #include "TensorVectorOperations.cu"
