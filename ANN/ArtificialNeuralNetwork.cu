@@ -4,8 +4,7 @@
 
 #include "Propulsion.cuh"
 
-void Propulsion::ArtificialNeuralNetwork::test()
-{
+void Propulsion::ArtificialNeuralNetwork::test() {
     // bullshit input for testing....
     /*
     double input_Arr[] = {1.0,2.0,3.0,2.5,
@@ -23,21 +22,41 @@ void Propulsion::ArtificialNeuralNetwork::test()
     double y[] = {0.0,1.0,1.0,0.0};*/
 
     double input_Arr[] =
-            { 0.0, 0.0, 1.0,
-              1.0, 1.0, 1.0,
-              1.0, 0.0, 1.0,
-              0.0, 1.0, 1.0,
-              0.0, 0.0, 0.0
+            {0.0, 0.0, 1.0,
+             1.0, 1.0, 1.0,
+             1.0, 0.0, 1.0,
+             0.0, 1.0, 1.0,
+             0.0, 0.0, 0.0
             };
 
-    double y[] = {1.0,0.0,0.0,
-                  0.0,1.0,0.0,
-                  0.0,1.0,0.0,
-                  1.0,0.0,0.0,
-                  0.0,0.0,1.0};
+    double bias_arr[] =
+            {5.0, 6.0, 7.0};
 
+    double y[] = {1.0, 0.0, 0.0,
+                  0.0, 1.0, 0.0,
+                  0.0, 1.0, 0.0,
+                  1.0, 0.0, 0.0,
+                  0.0, 0.0, 1.0};
+
+    Tensor<double> input(input_Arr, 1, 5, 3);
+    Tensor<double> bias(bias_arr, 1, 2);
+
+    input.test();
+    try {
+        input.addRowVector(bias);
+    }
+    catch (std::exception &e)
+    {
+        std::cout << e.what() << std::endl;
+    }
+    input.print();
+
+    auto firstLayer = Dense(5, 5);
+
+    firstLayer.printWeights();
 
     // input stored as a matrix.
+    /*
     Matrix<double> input(input_Arr,5,3);
     std::shared_ptr<Matrix<double>> y_true(new Propulsion::Matrix<double>(y,5,3));
 
@@ -65,5 +84,5 @@ void Propulsion::ArtificialNeuralNetwork::test()
     softmax.getOutputLayer()->print();
 
     auto loss_function = LossCategoricalCrossentropy();
-    loss_function.calculate(softmax.getOutputLayer(), y_true );
+    loss_function.calculate(softmax.getOutputLayer(), y_true );*/
 }

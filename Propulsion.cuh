@@ -81,9 +81,6 @@
 #define MATRIX_COPY_SIZE_DIFF 2000000
 
 
-
-
-
 /*
  * Nice Wrapper function provided by:
  * https://stackoverflow.com/questions/14038589/what-is-the-canonical-way-to-check-for-errors-using-the-cuda-runtime-api
@@ -97,8 +94,6 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
         if (abort) exit(code);
     }
 }
-
-
 
 namespace Propulsion {
 
@@ -961,6 +956,9 @@ namespace Propulsion {
         static Propulsion::Matrix<type> recursiveStrassen(Matrix<type> A, Matrix<type> B);
     };
 
+    /**
+     * @attention Defined in Tensor/Tensor.cuh
+     */
     template<typename type>
     class Tensor;
 
@@ -1025,7 +1023,34 @@ namespace Propulsion {
                                                                             std::shared_ptr< Propulsion::Matrix< int>> colorPicker);
     };
 
+    class ArtificialNeuralNetwork {
+    public:
+        class Layer {
+        protected:
+            std::shared_ptr<Tensor<double>> biases  = nullptr;
+            std::shared_ptr<Tensor<double>> outputLayer = nullptr;
+            std::shared_ptr<Tensor<double>> weights = nullptr;
+        public:
+            std::shared_ptr<Tensor<double>> getWeights();
+            std::shared_ptr<Tensor<double>> getBiases();
+            std::shared_ptr<Tensor<double>> getOutputLayer();
 
+            void printWeights();
+            void printBiases();
+            void printOutputLayer();
+        };
+        
+        class Dense : public Layer {
+        public:
+            Dense(unsigned nInputs, unsigned nNeurons);
+            void forward(Dense &input);
+            void forward(Tensor<double> &input);
+        };
+
+        void test();
+    };
+
+    /*
     class ArtificialNeuralNetwork
     {
     public:
@@ -1098,7 +1123,7 @@ namespace Propulsion {
 
 
         void test();
-    };
+    };*/
 
     static void helloWorld();
 
@@ -1111,8 +1136,6 @@ namespace Propulsion {
      *     \_/   '.__.''.___.'\__/ '.__.' [___]
      * Vector Related Functions Below.
      */
-
-
 
     /*
      * Function:    vectorAdd(type *a, type *b, unsigned size)
@@ -1338,6 +1361,8 @@ namespace Propulsion {
 #include "ANN/ActivationReLU.cu"
 #include "ANN/ActivationSigmoid.cu"
 #include "ANN/ActivationSoftmax.cu"
+#include "ANN/Dense.cu"
+#include "ANN/Layer.cu"
 #include "ANN/LayerDense.cu"
 #include "ANN/LossFunctions.cu"
 #include "Mandelbrot/Mandelbrot.cu"

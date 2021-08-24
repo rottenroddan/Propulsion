@@ -1141,7 +1141,7 @@ void tensorTests()
 
 
     unsigned long long rows, cols, tensors;
-    tensors = 1000;
+    tensors = 10;
     rows = 800;
     cols = 1600;
 
@@ -1158,15 +1158,8 @@ void tensorTests()
 
     std::cout << "Dot Product Test, all 2 tensors are equal with their respective counter-parts before test." << std::endl;
 
-
-    //aDot.dotProduct(bDot, true);
-
-    //Propulsion::Tensor<int> YUYUY(203, 203, 203);
-
     aDot.cudaDotProduct(bDot, true);
 
-    //int x = YUYUY(12,12,12);
-    //std::cout << x << std::endl;
 
 }
 
@@ -1198,12 +1191,12 @@ int main()
               "22222222222222222222     DDDDDDDDDDDDD\n\n"; //        arrays....*/
 
     //test_one_dimensional_array_operations();
-    secondMatrixTests();
+    //secondMatrixTests();
 
 
 
-    Propulsion::Mandelbrot M(640,480);
-    M.simulate();
+    //Propulsion::Mandelbrot M(640,480);
+    //M.simulate();
 
     /*
     Propulsion::Matrix<double> R(1000,1000);
@@ -1220,7 +1213,7 @@ int main()
     //matrixMultiplicationTests();
 
 
-    tensorTests();
+   aiClassifier();
 
 
 

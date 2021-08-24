@@ -5,16 +5,21 @@ CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\ActivationReLU.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\ActivationSigmoid.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\ActivationSoftmax.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\ArtificialNeuralNetwork.cu
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\Dense.cu
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\Layer.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\LayerDense.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\ANN\LossFunctions.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Mandelbrot\Mandelbrot.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Mandelbrot\MandelbrotKernel.cu
-CMakeFiles\Propulsion.dir\main.cu.obj: ..\Matrix.cu
-CMakeFiles\Propulsion.dir\main.cu.obj: ..\MatrixNumerical.cu
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\Matrix\Matrix.cu
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\Matrix\MatrixNumerical.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Propulsion.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Propulsion.cuh
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\PropulsionVectorOperations.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\Tensor.cuh
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorArithmeticOperations.cu
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorDotProduct.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorHelpers.cu
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorVectorOperations.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\main.cu
 

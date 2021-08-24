@@ -3,6 +3,7 @@
 //
 #include "../Propulsion.cuh"
 
+/*
 void Propulsion::ArtificialNeuralNetwork::ActivationSoftmax::forward(LayerDense &input)
 {
     /*
@@ -10,7 +11,7 @@ void Propulsion::ArtificialNeuralNetwork::ActivationSoftmax::forward(LayerDense 
                     1,2,3,
                     2,4,6,
                     4,8,12};
-    Propulsion::Matrix<double> sInp(sArr,4,3);*/
+    Propulsion::Matrix<double> sInp(sArr,4,3);/
 
     // Store a shared ptr of the output layer.
     auto inputMatrixPtr = input.getOutputLayer();
@@ -53,5 +54,5 @@ std::shared_ptr<Propulsion::Matrix<double> > Propulsion::ArtificialNeuralNetwork
 void Propulsion::ArtificialNeuralNetwork::ActivationSoftmax::printOutputLayer()
 {
     outputLayer->print();
-}
+}*/
 

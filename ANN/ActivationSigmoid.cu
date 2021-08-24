@@ -1,8 +1,9 @@
 //
 // Created by steve on 11/22/2020.
 //
-#include "Propulsion.cuh"
+#include "../Propulsion.cuh"
 
+/*
 void Propulsion::ArtificialNeuralNetwork::ActivationSigmoid::forward(LayerDense &input)
 {
     // Store a shared pointer of inputMatrix
@@ -24,4 +25,4 @@ void Propulsion::ArtificialNeuralNetwork::ActivationSigmoid::printOutputLayer()
     // Else its empty.
     else
         std::cout << "Output Layer is null currently" << std::endl;
-}
+}*/

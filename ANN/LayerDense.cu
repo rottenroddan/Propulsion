@@ -5,7 +5,7 @@
 #include "Propulsion.cuh"
 #include "../Propulsion.cuh"
 
-
+/*
 Propulsion::ArtificialNeuralNetwork::LayerDense::LayerDense(unsigned nInputs, unsigned nNeurons)
 {
     // Create the weights layer with N->Inputs(each sample) and N->Neurons(total neurons in this layer.
@@ -72,4 +72,4 @@ std::shared_ptr<Propulsion::Matrix < double>> Propulsion::ArtificialNeuralNetwor
 
 std::shared_ptr<Propulsion::Matrix < double>> Propulsion::ArtificialNeuralNetwork::LayerDense::getOutputLayer() {
     return this->outputLayer;
-}
+}*/

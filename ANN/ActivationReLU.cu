@@ -1,9 +1,10 @@
 //
 // Created by steve on 11/21/2020.
 //
-#include "Propulsion.cuh"
+#include "../Propulsion.cuh"
 #define RELU_LOWER_CONST 0
 
+/*
 void Propulsion::ArtificialNeuralNetwork::ActivationReLU::forward(LayerDense &input)
 {
     const double RELU_ZERO = 0.0;
@@ -24,4 +25,4 @@ void Propulsion::ArtificialNeuralNetwork::ActivationReLU::forward(LayerDense &in
 void Propulsion::ArtificialNeuralNetwork::ActivationReLU::printOutputLayer()
 {
     this->outputLayer->print();
-}
+}*/

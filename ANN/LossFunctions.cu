@@ -4,6 +4,7 @@
 
 #include "../Propulsion.cuh"
 
+/*
 double Propulsion::ArtificialNeuralNetwork::Loss::regularization(Matrix<double> &output, Matrix<double> &y)
 {
     return 0.0;
@@ -52,4 +53,4 @@ bool Propulsion::ArtificialNeuralNetwork::LossCategoricalCrossentropy::calculate
 
     confidences.print();
     return true;
-}
+}*/

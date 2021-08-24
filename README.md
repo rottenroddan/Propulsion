@@ -21,3 +21,6 @@ for this [here](https://rottenroddan.github.io/#projectsContainer). Below is a G
 Ongoing, but has slowed down since my final semester and other current projects. In and out of this project a lot due to other work.
 
 As of April 1st~, my 2080ti can't run under full stress as it creates BOD, therefore there is going to be a delay in continuing this until I get a new GPU.
+
+UPDATE as of August 19th: Started working on the Neural Network more. Refactoring it since last time I worked on it I was using Matrices, rather Tensors would
+make it easier to work with big data with many inputs all at once. Convolutional network doesn't seem so out of grasp. 

@@ -1,6 +1,7 @@
 //
 // Created by steve on 7/31/2020.
 //
+#pragma once
 #include "../Propulsion.cuh"
 
 template<typename type>
@@ -464,7 +465,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::addRowVector(Matrix<type> &b)
     {
         // Error for add row vector
         std::string err = "Matrix Size Mismatch, (" + std::to_string(this->rows) + ", " + std::to_string(this->cols) +
-                          ") vs. (" + std::to_string(b.rows) + ", " + std::to_string(b.cols) + ")" + ". Expected second Matrix to be ( 1, " + std::to_string(b.cols) + ")";
+                          ") vs. (" + std::to_string(b.rows) + ", " + std::to_string(b.cols) + ")" + ". Expected second Matrix to be ( 1, " + std::to_string(this->cols) + ")";
         throw Propulsion::Matrix<type>::MatrixException(err.c_str(),__FILE__, __LINE__, "addRowVector" ,
                                                         "addRowVector Requires that the argument be a row vector such that it is 1xn in DIM.");
     }
@@ -500,7 +501,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::addRowVector(Matrix<type> &&b
     {
         // Error for add row vector
         std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  +
-                          ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")" + ". Expected second Matrix to be ( 1, " + std::to_string(b.cols) + ")";
+                          ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")" + ". Expected second Matrix to be ( 1, " + std::to_string(this->cols) + ")";
         throw Propulsion::Matrix<type>::MatrixException(err.c_str(),__FILE__, __LINE__, "addRowVector" ,
                                                         "addRowVector Requires that the argument be a row vector such that it is 1xn in DIM.");
     }
@@ -536,7 +537,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::addColVector(Matrix<type> &b)
     {
         // Error for add row vector
         std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  +
-                          ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")" + ". Expected second Matrix to be ( " + std::to_string(b.rows) + ", 1)";
+                          ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")" + ". Expected second Matrix to be ( " + std::to_string(this->rows) + ", 1)";
         throw Propulsion::Matrix<type>::MatrixException(err.c_str(),__FILE__, __LINE__, "addColVector" ,
                                                         "addColVector Requires that the argument be a row vector such that it is nx1 in DIM.");
     }
@@ -572,7 +573,7 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::addColVector(Matrix<type> &&b
     {
         // Error for add row vector
         std::string err = "Matrix Size Mismatch, ("+ std::to_string(this->rows) + ", " + std::to_string(this->cols)  +
-                          ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")" + ". Expected second Matrix to be ( " + std::to_string(b.rows) + ", 1)";
+                          ") vs. (" + std::to_string(b.rows) +", " + std::to_string(b.cols) + ")" + ". Expected second Matrix to be ( " + std::to_string(this->rows) + ", 1)";
         throw Propulsion::Matrix<type>::MatrixException(err.c_str(),__FILE__, __LINE__, "addColVector" ,
                                                         "addColVector Requires that the argument be a row vector such that it is nx1 in DIM.");
     }
@@ -1194,25 +1195,6 @@ Propulsion::Matrix<type>& Propulsion::Matrix<type>::operator=(const Matrix<type>
     }
     return *this;
 }
-
-/*
-template<typename type>
-Propulsion::Matrix<type>& Propulsion::Matrix<type>::operator=(Matrix<type> &r)
-{
-    if(this == &r) {return *this;}
-    else {
-        delete[] this->M;
-        this->M = new type[r.totalSize];
-        this->rows = r.rows;
-        this->cols = r.cols;
-        this->totalSize = r.totalSize;
-
-        for (unsigned i = 0; i < r.totalSize; i++) {
-            this->M[i] = r.M[i];
-        }
-    }
-    return *this;
-}*/
 
 template <typename type>
 void Propulsion::Matrix<type>::pad(unsigned rows, unsigned cols)
