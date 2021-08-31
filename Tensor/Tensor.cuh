@@ -486,11 +486,12 @@ public:
 
     bool checkThirdDimensionsUpMatch(Propulsion::Tensor<type> &second)
     {
+        // Check if the tensor size are both one. If so, then return true.
+        if (this->getTotalMatrices() == 1 && second.getTotalMatrices() == 1)
+            return true;
         // Check if the total dims are the same.
-        if(this->getTotalDims() != second.getTotalDims())
-        {
+        else if(this->getTotalDims() != second.getTotalDims())
             return false;
-        }
         // Last check if the dims from N....3rd Dim all match.
         else
         {
@@ -890,6 +891,72 @@ public:
      * @returns     A Tensor reference of the Tensor object rowVector added with.
      */
      static Tensor<type>& addRowVector(Tensor<type> &A, Tensor<type> &rowVector);
+
+    /**
+    * \brief           Treats the parameter Tensor as a col vector and
+    *              adds to this row wise.
+    *
+    * \details         Adds the contents of col vector tensor to each col
+    *              in this. The tensor being used a col vector must only
+    *              have one matrix object as is being treated as only one
+    *              vector.
+    *
+    * \example     Tensor<double> input(input_Arr, 1, 5, 3);               <br>
+    *              Tensor<double> bias(bias_arr, 5, 1);                    <br>
+    *              input.addColVector(bias);   // Contents of bias added to each col of input.     <br>
+    *
+    * \throws      TensorException if the the Tensor Col Vector Parameter has more than one dimension above 2 Dims.
+    * \throws      TensorException if the Col dimension is not a value of 1, or if the row dimension does not match
+    *              that of this tensors row dim.
+    *
+    * @param       colVector Tensor object being treated as a col vector.
+    */
+     void addColVector(Tensor<type> &colVector);
+
+    /**
+    * \brief           Treats the parameter Matrix as a col vector and
+    *              adds to this row wise across all Matrices.
+    *
+    * \details         Adds the contents of col vector tensor to each row
+    *              in this. The tensor being used a col vector must only
+    *              have one matrix object as is being treated as only one
+    *              vector.
+    *
+    * \example     Tensor<double> input(input_Arr, 1, 5, 3);               <br>
+    *              Matrix<double> bias(bias_arr, 5, 1);                    <br>
+    *              input.addColVector(bias);   // Contents of bias added to each row of input.     <br>
+    *
+    * \throws      TensorException if the row dimension is not a value of 1, or if the row dimension does not match
+    *              that of this tensors row dim.
+    *
+    * @param       colVector Matrix object being treated as a col vector.
+    */
+    void addColVector(Matrix<type> &colVector);
+
+    /**
+     * \brief           Takes in two parameters. One is the Tensor object
+     *              as a standard Tensor, where the second Parameter is a
+     *              Tensor Object that is in shape of a col vector.
+     *
+     * \details         Excepts two parameters as Tensors. Treats the first
+     *              parameter as a standard Tensor object, while the second
+     *              parameter is treated as a col vector. Creates a new Tensor
+     *              object that is returned to the caller.
+     *
+     * \example     Tensor<double> input(input_Arr, 1, 5, 3);               <br>
+     *              Tensor<double> bias(bias_arr, 5, 1);                    <br>
+     *              auto x = Tensor<double>::addColVector(input, bias);     <br>
+     *
+     * \throws      TensorException if the the Tensor Col Vector Parameter has more than one dimension above 2 Dims.
+     * \throws      TensorException if the col dimension is not a value of 1, or if the row dimension does not match
+     *              that of this tensors row dim.
+     *
+     * @param       A Tensor that is of any size. The copied and modified value.
+     * @param       colVector Tensor object being treated as a col vector.
+     *
+     * @returns     A Tensor reference of the Tensor object colVector added with.
+     */
+    static Tensor<type>& addColVector(Tensor<type> &A, Tensor<type> &colVector);
 
     /**
      * \brief           Returns the total amount of dimensions from the dims deque.

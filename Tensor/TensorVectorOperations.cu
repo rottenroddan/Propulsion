@@ -68,3 +68,69 @@ Propulsion::Tensor<type>& Propulsion::Tensor<type>::addRowVector(Tensor <type> &
     A.addRowVector(rowVector);
     return A;
 }
+
+template<typename type>
+void Propulsion::Tensor<type>::addColVector(Tensor<type> &colVector)
+{
+    // Get the total amount of Matrices as we want to this value to be one.
+    unsigned long long dimsAboveSecond = colVector.getTotalMatrices();
+
+    // If its narrowed down to a 1xnxm vector. Let the Matrix class handle the vector portion of the Tensor.
+    if(dimsAboveSecond == 1)
+    {
+        // For every Matrix in this tensor, call addRowVector for the given Matrix.
+        for(unsigned i = 0; i < this->tensor.size(); i++)
+        {
+            try {
+                this->tensor[i] = std::make_shared<Matrix<type>>(
+                        this->tensor[i]->addColVector(*colVector.tensor[0]));
+            }
+            catch (typename Propulsion::Matrix<type>::MatrixException& mE) {
+                // Generate TensorException
+                std::string err;
+                std::string matrixWhat = mE.what();
+                // Using getDimsExceptionString helper function.
+                err += "Tensor Size Mismatch in addColVector, this: " + getDimsExceptionString(this->dims) + " vs " + getDimsExceptionString(colVector.dims);
+                throw Tensor<type>::TensorException(err.c_str(), __FILE__, __LINE__,
+                                                    "addColVector", (std::string("The passed \"Col Vector\" doesn't have the same row size as this Tensor. Matrix Exception: ") + matrixWhat).c_str());
+            }
+        }
+    }
+    else
+    {
+        std::string err;
+        err += "Tensor Size Mismatch in addColVector, this: " + getDimsExceptionString(this->dims) + " vs " + getDimsExceptionString(colVector.dims);
+        throw Tensor<type>::TensorException(err.c_str(), __FILE__, __LINE__,
+                                            "addColVector", "The passed \"Col Vector\" has to have only one matrix.");
+    }
+}
+
+template<typename type>
+void Propulsion::Tensor<type>::addColVector(Matrix <type> &colVector)
+{
+    for(unsigned i = 0; i < this->getTotalMatrices(); i++)
+    {
+        try {
+            this->tensor[i] = std::make_shared<Matrix<type>>(
+                    this->tensor[i]->addColVector(*colVector.M)
+            );
+        }
+        catch (typename Propulsion::Matrix<type>::MatrixException& mE) {
+            // Generate TensorException
+            std::string err;
+            std::string matrixWhat = mE.what();
+            // Using getDimsExceptionString helper function.
+            err += "Tensor Size Mismatch in addColVector, this: " + getDimsExceptionString(this->dims) + " vs " + getDimsExceptionString(colVector.dims);
+            throw Tensor<type>::TensorException(err.c_str(), __FILE__, __LINE__,
+                                                "addColVector", (std::string("The passed \"Col Vector\" doesn't have the same row size as this Tensor. Matrix Exception: ") + matrixWhat).c_str());
+        }
+    }
+}
+
+template<typename type>
+Propulsion::Tensor<type>& Propulsion::Tensor<type>::addColVector(Tensor <type> &A, Tensor <type> &colVector)
+{
+    Tensor<type> retTensor = A;
+    A.addColVector(colVector);
+    return A;
+}

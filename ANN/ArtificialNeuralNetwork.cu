@@ -30,7 +30,7 @@ void Propulsion::ArtificialNeuralNetwork::test() {
             };
 
     double bias_arr[] =
-            {5.0, 6.0, 7.0};
+            {5.0, 6.0, 7.0, 8.0, 9.0};
 
     double y[] = {1.0, 0.0, 0.0,
                   0.0, 1.0, 0.0,
@@ -39,21 +39,17 @@ void Propulsion::ArtificialNeuralNetwork::test() {
                   0.0, 0.0, 1.0};
 
     Tensor<double> input(input_Arr, 1, 5, 3);
-    Tensor<double> bias(bias_arr, 1, 3);
+    Tensor<double> bias(bias_arr, 5, 1);
     Tensor<double> x(1,1);
 
 
-    //input.test();
-    try {
-        x = Tensor<double>::addRowVector(input, bias);
-    }
-    catch (std::exception &e)
-    {
 
-    }
-    x.print();
 
-    auto firstLayer = Dense(5, 5);
+    auto firstLayer = Dense(3, 5);
+    firstLayer.printWeights();
+    firstLayer.forward(input);
+
+    firstLayer.printOutputLayer();
 
     //firstLayer.printWeights();
 

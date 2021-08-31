@@ -77,7 +77,7 @@ void Propulsion::Tensor<type>::cudaDotProduct(Tensor <type> &B, bool printTime, 
     if(printTime)
         start = std::chrono::high_resolution_clock::now();
 
-    if(this->getTotalDims() <= 2)
+    if(this->getTotalMatrices() == 1)
     {
         this->tensor[0]->cudaDotProduct(*B.tensor[0]);
     }
@@ -296,4 +296,16 @@ void Propulsion::Tensor<type>::cudaDotProduct(Tensor <type> &B, bool printTime, 
                   std::right << std::setw(TIME_WIDTH) << std::fixed << std::setprecision(TIME_PREC) << milliseconds <<
                   " ms." << std::setw(TIME_WIDTH) << (this->getTotalSize() * sizeof(type)) / milliseconds / 1e6 << " GB/s" << std::endl;
     }
+}
+
+template<typename type>
+Propulsion::Tensor<type> Propulsion::Tensor<type>::operator*(Tensor <type> &rhs)
+{
+    // Copy this to return that way its non modifying.
+    Tensor<type> ret = *this;
+
+    // Use CUDA to dot product the Tensors.
+    ret.cudaDotProduct(rhs, false, false);
+
+    return ret;
 }

@@ -800,14 +800,3 @@ Propulsion::Tensor<type> Propulsion::Tensor<type>::operator-(Tensor <type> &rhs)
     return ret;
 }
 
-template<typename type>
-Propulsion::Tensor<type> Propulsion::Tensor<type>::operator*(Tensor <type> &rhs)
-{
-    // Copy this to return that way its non modifying.
-    Tensor<type> ret = *this;
-
-    // Use CUDA to dot product the Tensors.
-    ret.cudaDotProduct(rhs, false, false);
-
-    return ret;
-}
