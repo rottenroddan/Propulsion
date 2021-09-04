@@ -330,6 +330,47 @@ public:
     };
 
     /**
+     * \brief           Returns the Matrix object at the provided index param.
+     *
+     * \details         Returns the Matrix object at the provided index param.
+     *              Checks if the value is valid range for the Matrix list. If
+     *              not, throws a Tensor exception if out of range.
+     *
+     * @param       index Unsigned value of the index being accessed in the tensor.
+     *
+     * @return      shared_ptr of the Matrix object at the given index.
+     */
+    std::shared_ptr<Matrix<type>> matrixAt(unsigned long long index)
+    {
+        if(index < this->tensor.size())
+        {
+            return this->tensor[index];
+        }
+        else
+        {
+            std::string err = "Tensor Access Element out of Bounds, user requested bounds: ( " + std::to_string(index) + " ), when dims are: " + getDimsExceptionString(this->dims) + ".";
+            throw Tensor<type>::TensorException(err.c_str(), __FILE__, __LINE__,
+                                                "at", "User specified an element of a dimension that exceeds it's Max Index. E.g. if Tensor(2,2,2) exists, then the user shouldn't allowed to access (2,1,1) since 2 >= 2 on index 0.");
+        }
+    }
+
+    /**
+     * \brief           Returns the Matrix object at the provided index param.
+     *
+     * \details         Returns the Matrix object at the provided index param.
+     *              Checks if the value is valid range for the Matrix list. If
+     *              not, throws a Tensor exception.
+     *
+     * @param       index Unsigned value of the index being accessed in the tensor.
+     *
+     * @return      shared_ptr of the Matrix object at the given index.
+     */
+    std::shared_ptr<Matrix<type>> operator[](unsigned long long index)
+    {
+        return this->tensor[index];
+    }
+
+    /**
      * \brief           Returns a reference of the type from the given input as a
      *              k x ... x m x n indexing. Throws TensorException if needed.
      *
@@ -342,14 +383,15 @@ public:
      *              deque to calculate what index we need to be at.
      *
      * \example     Tensor<int> T(4,4,4,4); // Create 4x4x4x4 Tensor            <br>
-     *              T(3,2,1,0) = 123;       // Sets the Matrix at 3x2(14th Matrix) at i=1, j=0 to 123.
+     *              T(3,2,1,0) = 123;       // Sets the Matrix at 3x2(15th Matrix) at i=1, j=0 to 123.
      *
      * @throws      TensorException If the supplied index is out-of-bounds or an incomplete list.
      *
      * @param       ...args Template packed parameter that only accepts unsigned
      *              long long convertible values.
      *
-     * @see         operate() for no exception
+     * @see         operator() for no exception.
+     * @see         operator[] for Matrix return.
      *
      * @return      Reference of type value from the given index.
      */
@@ -409,8 +451,6 @@ public:
 
                 throw Tensor<type>::TensorException(err.c_str(), __FILE__, __LINE__,
                                                     "at", "User specified an element of a dimension that exceeds it's Max Index. E.g. if Tensor(2,2,2) exists, then the user shouldn't allowed to access (2,1,1) since 2 >= 2 on index 0.");
-
-                return (type) 0.0;
             }
         }
 
@@ -1143,7 +1183,6 @@ public:
 
     void test() {}
 };
-
 
 #include "TensorArithmeticOperations.cu"
 #include "TensorCopy.cu"

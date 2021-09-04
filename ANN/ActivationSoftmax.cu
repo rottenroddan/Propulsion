@@ -56,3 +56,16 @@ void Propulsion::ArtificialNeuralNetwork::ActivationSoftmax::printOutputLayer()
     outputLayer->print();
 }*/
 
+void Propulsion::ArtificialNeuralNetwork::Softmax::forward(std::shared_ptr<Tensor<double>> input)
+{
+    double arr[] = {4.8, 1.21, 2.385,
+                   8.9, -1.81, 0.2,
+                   1.41, 1.051, 0.026};
+
+    Matrix<double> m(arr, 3, 3);
+
+    Tensor<double> t(1,3,3);
+    *t.matrixAt(0) = m;
+
+    t.print();
+}

@@ -26,3 +26,20 @@ void Propulsion::ArtificialNeuralNetwork::ActivationReLU::printOutputLayer()
 {
     this->outputLayer->print();
 }*/
+
+void Propulsion::ArtificialNeuralNetwork::ReLU::forward(Layer &input)
+{
+    // Copy the contents of output layer from input into this output layer,
+    // that way it can be ReLU activated in the next steps.
+    *this->outputLayer = *input.getOutputLayer();
+
+    for(unsigned long long i = 0; i < this->outputLayer->getTotalMatrices(); i++)
+    {
+        for(unsigned long long j = 0; j < this->outputLayer->matrixAt(i)->getTotalSize(); j++)
+        {
+            // IF value is > 0, don't change. Else it is zero.
+            this->outputLayer->matrixAt(i)->at(j) = this->outputLayer->matrixAt(i)->at(j) > 0 ?
+                    this->outputLayer->matrixAt(i)->at(j) : 0;
+        }
+    }
+}

@@ -10,7 +10,7 @@ Propulsion::Tensor<type>& Propulsion::Tensor<type>::operator=(const Tensor <type
     else {
         // Copy dims of rhs.
         this->dims = rhs.dims;
-        this->tensor.clear();   // delete this tensor as its contents are no longer needed.
+        this->tensor.clear();
 
         // If Matrix size is 2 or greater.
         if(this->dims.size() >= 2) {

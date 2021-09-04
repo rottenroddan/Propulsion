@@ -45,11 +45,19 @@ void Propulsion::ArtificialNeuralNetwork::test() {
 
 
 
-    auto firstLayer = Dense(3, 5);
+    auto firstLayer = Dense(3, 3);
     firstLayer.printWeights();
     firstLayer.forward(input);
 
     firstLayer.printOutputLayer();
+
+    auto relu = ReLU();
+    relu.forward(firstLayer);
+    relu.printOutputLayer();
+
+    auto soft = Softmax();
+
+    soft.forward(relu.getOutputLayer());
 
     //firstLayer.printWeights();
 

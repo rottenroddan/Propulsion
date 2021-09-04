@@ -6,6 +6,10 @@
 
 #IncludeRegexTransform: 
 
+C:/Users/steve/CLionProjects/Propulsion/ANN/ActivationFunctions.cu
+../Propulsion.cuh
+C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
+
 C:/Users/steve/CLionProjects/Propulsion/ANN/ActivationReLU.cu
 ../Propulsion.cuh
 C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
@@ -123,6 +127,8 @@ Tensor/Tensor.cuh
 C:/Users/steve/CLionProjects/Propulsion/Tensor/Tensor.cuh
 ANN/ArtificialNeuralNetwork.cu
 C:/Users/steve/CLionProjects/Propulsion/ANN/ArtificialNeuralNetwork.cu
+ANN/ActivationFunctions.cu
+C:/Users/steve/CLionProjects/Propulsion/ANN/ActivationFunctions.cu
 ANN/ActivationReLU.cu
 C:/Users/steve/CLionProjects/Propulsion/ANN/ActivationReLU.cu
 ANN/ActivationSigmoid.cu

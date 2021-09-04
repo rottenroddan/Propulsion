@@ -1047,6 +1047,27 @@ namespace Propulsion {
             void forward(Tensor<double> &input);
         };
 
+        class ActivationFunctions {
+        protected:
+            std::shared_ptr<Tensor<double>> outputLayer = nullptr;
+        public:
+            ActivationFunctions();
+            std::shared_ptr<Tensor<double>> getOutputLayer();
+            void printOutputLayer();
+        };
+
+        class ReLU : public ActivationFunctions {
+        public:
+            void forward(Layer &input);
+            void forward(std::shared_ptr<Tensor<double>> input);
+        };
+
+        class Softmax : public ActivationFunctions {
+        public:
+            void forward(Layer &input);
+            void forward(std::shared_ptr<Tensor<double>> input);
+        };
+
         void test();
     };
 
@@ -1358,6 +1379,7 @@ namespace Propulsion {
 
 #include "Tensor/Tensor.cuh"
 #include "ANN/ArtificialNeuralNetwork.cu"
+#include "ANN/ActivationFunctions.cu"
 #include "ANN/ActivationReLU.cu"
 #include "ANN/ActivationSigmoid.cu"
 #include "ANN/ActivationSoftmax.cu"
