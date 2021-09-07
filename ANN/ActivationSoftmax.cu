@@ -60,12 +60,15 @@ void Propulsion::ArtificialNeuralNetwork::Softmax::forward(std::shared_ptr<Tenso
 {
     double arr[] = {4.8, 1.21, 2.385,
                    8.9, -1.81, 0.2,
-                   1.41, 1.051, 0.026};
+                   1.41, 1.051, 0.026,
+                    1.41, 1.051, 0.026};
 
-    Matrix<double> m(arr, 3, 3);
+    Matrix<double> m(arr, 4, 3);
 
     Tensor<double> t(1,3,3);
     *t.matrixAt(0) = m;
 
     t.print();
+
+    Tensor<double> test;
 }

@@ -1479,3 +1479,87 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::subtractBroadScalar(Matrix<ty
 
     return ret;
 }
+
+template<typename type>
+Propulsion::Matrix<type> Propulsion::Matrix<type>::maxValue(MatrixDimWise dim)
+{
+    // If its not row or column wise.
+    if(dim == MatrixDimWise::none)
+    {
+        Matrix<type> ret(1,1);
+        ret(0) = this->getMax();
+        return ret;
+    }
+    // If specified row wise.
+    else if(dim == MatrixDimWise::row)
+    {
+        Matrix<type> ret(this->rows, 1);
+        for(unsigned i = 0; i < this->rows; i++)
+        {
+            type maxVal = this->operator()(i,0);
+            for(unsigned j = 1; j < this->cols; j++)
+            {
+                maxVal = max(maxVal, this->operator()(i,j));
+            }
+            ret(i, 0) = maxVal;
+        }
+        return ret;
+    }
+    // If specified col wise.
+    else
+    {
+        Matrix<type> ret(1, this->cols);
+        for(unsigned j = 0; j < this->cols; j++)
+        {
+            type maxVal = this->operator()(0, j);
+            for(unsigned i = 0; i < this->rows; i++)
+            {
+                maxVal = max(maxVal, this->operator()(i,j));
+            }
+            ret(0, j) = maxVal;
+        }
+        return ret;
+    }
+}
+
+template<typename type>
+Propulsion::Matrix<type> Propulsion::Matrix<type>::minValue(MatrixDimWise dim)
+{
+    // If its not row or column wise.
+    if(dim == MatrixDimWise::none)
+    {
+        Matrix<type> ret(1,1);
+        ret(0) = this->getMin();
+        return ret;
+    }
+    // If specified row wise.
+    else if(dim == MatrixDimWise::row)
+    {
+        Matrix<type> ret(this->rows, 1);
+        for(unsigned i = 0; i < this->rows; i++)
+        {
+            type minVal = this->operator()(i,0);
+            for(unsigned j = 1; j < this->cols; j++)
+            {
+                minVal = min(minVal, this->operator()(i,j));
+            }
+            ret(i, 0) = minVal;
+        }
+        return ret;
+    }
+    // If specified col wise.
+    else
+    {
+        Matrix<type> ret(1, this->cols);
+        for(unsigned j = 0; j < this->cols; j++)
+        {
+            type minVal = this->operator()(0, j);
+            for(unsigned i = 0; i < this->rows; i++)
+            {
+                minVal = min(minVal, this->operator()(i,j));
+            }
+            ret(0, j) = minVal;
+        }
+        return ret;
+    }
+}

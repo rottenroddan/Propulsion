@@ -27,7 +27,11 @@ private:
     std::deque<unsigned long long> dims;
 
     friend class Propulsion::Matrix<type>;
+
+    void setMatrixDims(unsigned long long rVal, unsigned long long cVal);
 public:
+    enum TensorDimWise {none, row, column};
+
     /**
      * Class:        TensorException
      *
@@ -58,6 +62,11 @@ public:
         const char* get_func() const { return func; }
         const char* get_info() const { return info; }
     };
+
+    Tensor()
+    {
+        this->dims = {0,0};
+    }
 
     /**
      * \brief       Constructor method for creating a Tensor Object. Args is template packed
@@ -257,6 +266,8 @@ public:
             this->tensor[i] = std::move(moveT.tensor[i]);
         }
     }
+
+    void push_back(const Matrix<type>& m);
 
     /**
      * \brief           Returns a reference of the type from the given input as a
@@ -843,6 +854,16 @@ public:
     }
 
     /**
+     * \brief           Returns a boolean representing if there is any memory
+     *              allocated for the Tensor.
+     * @return      Boolean True if there is data allocated and managed by this. False otherwise.
+     */
+    bool isEmpty()
+    {
+        return (this->tensor.size() == 0);
+    }
+
+    /**
      * \brief           Populate Tensor with Random Real Distribution.
      *
      * \details         Populate Tensor with Random Real Distribution using
@@ -930,7 +951,7 @@ public:
      *
      * @returns     A Tensor reference of the Tensor object rowVector added with.
      */
-     static Tensor<type>& addRowVector(Tensor<type> &A, Tensor<type> &rowVector);
+     static Tensor<type> addRowVector(Tensor<type> &A, Tensor<type> &rowVector);
 
     /**
     * \brief           Treats the parameter Tensor as a col vector and
@@ -996,7 +1017,142 @@ public:
      *
      * @returns     A Tensor reference of the Tensor object colVector added with.
      */
-    static Tensor<type>& addColVector(Tensor<type> &A, Tensor<type> &colVector);
+    static Tensor<type> addColVector(Tensor<type> &A, Tensor<type> &colVector);
+
+    /**
+     * \brief           Treats the parameter Tensor as a row vector and
+     *              subtracts to this column wise.
+     *
+     * \details         Subtracts the contents of row vector tensor to each row
+     *              in this. The tensor being used a row vector must only
+     *              have one matrix object as is being treated as only one
+     *              vector.
+     *
+     * \example     Tensor<double> input(input_Arr, 1, 5, 3);               <br>
+     *              Tensor<double> bias(bias_arr, 1, 3);                    <br>
+     *              input.subtractRowVector(bias);   // Contents of bias subtracted to each row of input.     <br>
+     *
+     * \throws      TensorException if the the Tensor Row Vector Parameter has more than one dimension above 2 Dims.
+     * \throws      TensorException if the row dimension is not a value of 1, or if the column dimension does not match
+     *              that of this tensors column dim.
+     *
+     * @param       rowVector Tensor object being treated as a row vector.
+     */
+    void subtractRowVector(Tensor<type> &rowVector);
+
+    /**
+     * \brief           Treats the parameter Matrix as a row vector and
+     *              subtracts to this column wise across all Matrices.
+     *
+     * \details         Subtracts the contents of row vector tensor to each row
+     *              in this. The tensor being used a row vector must only
+     *              have one matrix object as is being treated as only one
+     *              vector.
+     *
+     * \example     Tensor<double> input(input_Arr, 1, 5, 3);               <br>
+     *              Matrix<double> bias(bias_arr, 1, 3);                    <br>
+     *              input.subtractRowVector(bias);   // Contents of bias subtracted to each row of input.     <br>
+     *
+     * \throws      TensorException if the row dimension is not a value of 1, or if the column dimension does not match
+     *              that of this tensors column dim.
+     *
+     * @param       rowVector Matrix object being treated as a row vector.
+     */
+    void subtractRowVector(Matrix<type> &rowVector);
+
+    /**
+     * \brief           Takes in two parameters and adds them. One is the Tensor
+     *              object as a standard Tensor, where the second Parameter is a
+     *              Tensor Object that is in shape of a row vector.
+     *
+     * \details         Excepts two parameters as Tensors and adds them. Treats
+     *              the first parameter as a standard Tensor object, while the
+     *              second parameter is treated as a row vector. Creates a new
+     *              Tensor object that is returned to the caller.
+     *
+     * \example     Tensor<double> input(input_Arr, 1, 5, 3);               <br>
+     *              Tensor<double> bias(bias_arr, 1, 3);                    <br>
+     *              auto x = Tensor<double>::subtractRowVector(input, bias);     <br>
+     *
+     * \throws      TensorException if the the Tensor Row Vector Parameter has more than one dimension above 2 Dims.
+     * \throws      TensorException if the row dimension is not a value of 1, or if the column dimension does not match
+     *              that of this tensors column dim.
+     *
+     * @param       A Tensor that is of any size. The copied and modified value.
+     * @param       rowVector Tensor object being treated as a row vector.
+     *
+     * @returns     A Tensor reference of the Tensor object rowVector added with.
+     */
+    static Tensor<type> subtractRowVector(Tensor<type> &A, Tensor<type> &rowVector);
+
+    /**
+    * \brief           Treats the parameter Tensor as a col vector and
+    *              subtracts to this row wise.
+    *
+    * \details         Subtracts the contents of col vector tensor to each col
+    *              in this. The tensor being used a col vector must only
+    *              have one matrix object as is being treated as only one
+    *              vector.
+    *
+    * \example     Tensor<double> input(input_Arr, 1, 5, 3);               <br>
+    *              Tensor<double> bias(bias_arr, 5, 1);                    <br>
+    *              input.subtractColVector(bias);   // Contents of bias added to each col of input.     <br>
+    *
+    * \throws      TensorException if the the Tensor Col Vector Parameter has more than one dimension above 2 Dims.
+    * \throws      TensorException if the Col dimension is not a value of 1, or if the row dimension does not match
+    *              that of this tensors row dim.
+    *
+    * @param       colVector Tensor object being treated as a col vector.
+    */
+    void subtractColVector(Tensor<type> &colVector);
+
+    /**
+    * \brief           Treats the parameter Matrix as a col vector and
+    *              subtracts to this row wise across all Matrices.
+    *
+    * \details         Subtracts the contents of col vector tensor to each row
+    *              in this. The tensor being used a col vector must only
+    *              have one matrix object as is being treated as only one
+    *              vector.
+    *
+    * \example     Tensor<double> input(input_Arr, 1, 5, 3);               <br>
+    *              Matrix<double> bias(bias_arr, 5, 1);                    <br>
+    *              input.subtractColVector(bias);   // Contents of bias added to each row of input.     <br>
+    *
+    * \throws      TensorException if the row dimension is not a value of 1, or if the row dimension does not match
+    *              that of this tensors row dim.
+    *
+    * @param       colVector Matrix object being treated as a col vector.
+    */
+    void subtractColVector(Matrix<type> &colVector);
+
+    /**
+     * \brief           Takes in two parameters. One is the Tensor object
+     *              as a standard Tensor, where the second Parameter is a
+     *              Tensor Object that is in shape of a col vector.
+     *
+     * \details         Excepts two parameters as Tensors. Treats the first
+     *              parameter as a standard Tensor object, while the second
+     *              parameter is treated as a col vector. Creates a new Tensor
+     *              object that is returned to the caller.
+     *
+     * \example     Tensor<double> input(input_Arr, 1, 5, 3);               <br>
+     *              Tensor<double> bias(bias_arr, 5, 1);                    <br>
+     *              auto x = Tensor<double>::subtractColVector(input, bias);     <br>
+     *
+     * \throws      TensorException if the the Tensor Col Vector Parameter has more than one dimension above 2 Dims.
+     * \throws      TensorException if the col dimension is not a value of 1, or if the row dimension does not match
+     *              that of this tensors row dim.
+     *
+     * @param       A Tensor that is of any size. The copied and modified value.
+     * @param       colVector Tensor object being treated as a col vector.
+     *
+     * @returns     A Tensor reference of the Tensor object colVector added with.
+     */
+    static Tensor<type> subtractColVector(Tensor<type> &A, Tensor<type> &colVector);
+
+    Tensor<type> maxValue(TensorDimWise dim);
+    Tensor<type> minValue(TensorDimWise dim);
 
     /**
      * \brief           Returns the total amount of dimensions from the dims deque.
@@ -1038,6 +1194,32 @@ public:
     const std::deque<unsigned long long>& getDims()
     {
         return this->dims;
+    }
+
+    /**
+     * \brief           Returns the dims from 3rd and up. Given that row and col vector
+     *              are first and second dims.
+     *
+     * @return      const deque<unsigned long long> ref that is a list of 3rd dims and up.
+     */
+    std::deque<unsigned long long> getThirdDimensionUp()
+    {
+        std::deque<unsigned long long> retDeque;
+        if(this->dims.size() > 2) {
+            for(unsigned i = 2; i < this->dims.size(); i++) {
+                retDeque.push_back(this->dims[i]);
+            }
+        }
+
+        return retDeque;
+    }
+
+    std::deque<unsigned long long> getRowColDimension()
+    {
+        std::deque<unsigned long long> retDeque;
+        for(unsigned i = 0; (i < this->dims.size() && i < 2); i++) {
+            retDeque.push_back(this->dims[i]);
+        }
     }
 
     /**

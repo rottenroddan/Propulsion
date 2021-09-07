@@ -59,6 +59,8 @@ void Propulsion::ArtificialNeuralNetwork::test() {
 
     soft.forward(relu.getOutputLayer());
 
+
+
     //firstLayer.printWeights();
 
     // input stored as a matrix.

@@ -178,6 +178,8 @@ namespace Propulsion {
 
         enum MatrixMemType {paged, pinned};
 
+        enum MatrixDimWise {none, row, column};
+
 
         /*
          * Function     Matrix()
@@ -275,8 +277,6 @@ namespace Propulsion {
          * Author:      Steven Roddan on 8/4/2020.
          */
         Matrix(type *, unsigned , unsigned ,  MatrixMemType memType = MatrixMemType::pinned, MatrixInitVal miv = MatrixInitVal::custom, type customVal = NULL, MatrixInitType mit = MatrixInitType::def);
-
-
 
         /*
          * Method:      print()
@@ -548,6 +548,44 @@ namespace Propulsion {
          * @return      Type Min value in the Matrix.
          */
         type getMin();
+
+        /**
+         * \brief           Returns a Matrix object that conforms to
+         *              dimensions the parameter specifies for a max
+         *              value.
+         *
+         * \details         Returns a Matrix object that conforms to
+         *              dimensions the parameter specified. If the
+         *              param is left alone, it defaults to max value
+         *              of the whole entire Matrix array. If row, it
+         *              compares the matrix row wise and returns a
+         *              row vector as a Matrix. If column, it compares
+         *              the matrix col wise and returns a col vector as
+         *              a Matrix.
+         *
+         * @param       dim The MatrixDimWise enumerator specifying what dimension wise we want the return type to be.
+         * @return      Matrix as (1,1), (1,n) or (n,1) of max values for the specified param.
+         */
+        Matrix<type> maxValue(MatrixDimWise dim = MatrixDimWise::none);
+
+        /**
+         * \brief           Returns a Matrix object that conforms to
+         *              dimensions the parameter specifies for a max
+         *              value.
+         *
+         * \details         Returns a Matrix object that conforms to
+         *              dimensions the parameter specified. If the
+         *              param is left alone, it defaults to min value
+         *              of the whole entire Matrix array. If row, it
+         *              compares the matrix row wise and returns a
+         *              row vector as a Matrix. If column, it compares
+         *              the matrix col wise and returns a col vector as
+         *              a Matrix.
+         *
+         * @param       dim The MatrixDimWise enumerator specifying what dimension wise we want the return type to be.
+         * @return      Matrix as (1,1), (1,n) or (n,1) of min values for the specified param.
+         */
+        Matrix<type> minValue(MatrixDimWise dim = MatrixDimWise::none);
 
         /**
          * \brief           Broadcast s type added to A Matrix Param.
