@@ -25,3 +25,4 @@ Ongoing, but has slowed down since my final semester and other current projects.
 UPDATE as of August 19th: Started working on the Neural Network more. Refactoring it since last time I worked on it I was using Matrices, rather Tensors would
 make it easier to work with big data with many inputs all at once. Convolutional network doesn't seem so out of grasp. 
 
+*ALOT* of refactoring, design decisions as far as the Tensor class is concerned.   
