@@ -42,7 +42,6 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
-
     // Create device array pointers.
     int *dev_output, *dev_colorPicker;
 
@@ -66,7 +65,6 @@ std::unique_ptr<Propulsion::Matrix<int>> Propulsion::Mandelbrot::calculateMandel
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
     cudaMemcpy(Mandelset->getArray(), dev_output, wPixels * sizeof(int) * hPixels, cudaMemcpyDeviceToHost);
-
 
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);

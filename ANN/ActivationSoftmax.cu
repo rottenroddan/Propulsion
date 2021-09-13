@@ -70,5 +70,10 @@ void Propulsion::ArtificialNeuralNetwork::Softmax::forward(std::shared_ptr<Tenso
 
     t.print();
 
-    Tensor<double> test;
+    Tensor<double> test(arr, 4, 3);
+
+    test.print();
+    std::deque<unsigned long long> newDims = {1,3,4};
+    test.reshape(newDims);
+    test.print();
 }

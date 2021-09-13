@@ -28,7 +28,7 @@ private:
 
     friend class Propulsion::Matrix<type>;
 
-    void setMatrixDims(unsigned long long rVal, unsigned long long cVal);
+    //void setMatrixDims(unsigned long long rVal, unsigned long long cVal);
 public:
     enum TensorDimWise {none, row, column};
 
@@ -266,6 +266,8 @@ public:
             this->tensor[i] = std::move(moveT.tensor[i]);
         }
     }
+
+    bool reshape(std::deque<unsigned long long> reshapeDims);
 
     void push_back(const Matrix<type>& m);
 
@@ -1217,9 +1219,19 @@ public:
     std::deque<unsigned long long> getRowColDimension()
     {
         std::deque<unsigned long long> retDeque;
-        for(unsigned i = 0; (i < this->dims.size() && i < 2); i++) {
-            retDeque.push_back(this->dims[i]);
+
+        if(this->dims.size() == 0) {
+            return retDeque;
         }
+        else if(this->dims.size() == 1) {
+            retDeque.push_back(this->dims[0]);
+        }
+        else {
+            retDeque.push_back(this->dims[dims.size()-2]);
+            retDeque.push_back(this->dims[dims.size()-1]);
+        }
+
+        return retDeque;
     }
 
     /**
@@ -1368,5 +1380,6 @@ public:
 
 #include "TensorArithmeticOperations.cu"
 #include "TensorCopy.cu"
+#include "TensorDimensionOperations.cu"
 #include "TensorDotProduct.cu"
 #include "TensorVectorOperations.cu"

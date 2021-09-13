@@ -1563,3 +1563,17 @@ Propulsion::Matrix<type> Propulsion::Matrix<type>::minValue(MatrixDimWise dim)
         return ret;
     }
 }
+
+template<typename type>
+bool Propulsion::Matrix<type>::reshape(unsigned int desiredRows, unsigned int desiredCols)
+{
+    unsigned desiredSize = desiredRows * desiredCols;
+    if(desiredSize == this->getTotalSize())
+    {
+        this->rows = desiredRows;
+        this->cols = desiredCols;
+        return true;
+    }
+
+    return false;
+}

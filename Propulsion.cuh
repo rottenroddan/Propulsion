@@ -666,11 +666,11 @@ namespace Propulsion {
 
         /**
          * \brief           Returns the pointer of the unique_ptr if needed. This
-         *              is unsafe as it doesn't gurantee the lifeline of that pointer.
+         *              is unsafe as it doesn't guarantee the lifeline of that pointer.
          *
          * \details         Returns the pointer of the unique_ptr storing the Matrix
          *              data if the user needs it. It is unadvised to do so, as the
-         *              pointer is not guranteed to be valid. Discretion is advised.
+         *              pointer is not guaranteed to be valid. Discretion is advised.
          *
          * @return      Type array pointer of the Matrix. If needed its provided.
          */
@@ -894,6 +894,8 @@ namespace Propulsion {
         Matrix<type> operator*(type);
         Matrix<type> operator*(const Matrix<type> &rhs);
         Matrix<type>& operator=(const Matrix<type>  &rhs);
+
+        bool reshape(unsigned desiredRows, unsigned desiredCols);
 
         /**
          * \brief           Zero pads this Matrix with specified
