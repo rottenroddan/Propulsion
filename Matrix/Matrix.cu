@@ -855,19 +855,19 @@ type* Propulsion::Matrix<type>::getArray()
 }
 
 template<typename type>
-unsigned Propulsion::Matrix<type>::getColSize()
+unsigned Propulsion::Matrix<type>::getColSize() const
 {
     return cols;
 }
 
 template<typename type>
-unsigned Propulsion::Matrix<type>::getRowSize()
+unsigned Propulsion::Matrix<type>::getRowSize() const
 {
     return rows;
 }
 
 template<typename type>
-unsigned Propulsion::Matrix<type>::getTotalSize()
+unsigned Propulsion::Matrix<type>::getTotalSize() const
 {
     return cols * rows;
 }

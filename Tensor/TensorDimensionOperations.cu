@@ -5,10 +5,10 @@
 #include "../Propulsion.cuh"
 
 template<typename type>
-bool Propulsion::Tensor<type>::reshape(std::deque<unsigned long long> reshapeDims)
+bool Propulsion::Tensor<type>::reshape(const std::deque<unsigned long long>& reshapeDims)
 {
     // Desired shape is empty. Edge case.
-    if(reshapeDims.size() == 0) {
+    if(reshapeDims.empty()) {
         return false;
     }
 
@@ -32,7 +32,7 @@ bool Propulsion::Tensor<type>::reshape(std::deque<unsigned long long> reshapeDim
     }
 
     // If the reshape is possible for the Matrix.
-    if(this->tensor[0]->getRowSize() * this->tensor[0]->getColSize() == desiredRows * desiredCols)
+    if(this->tensor[0]->getTotalSize() == desiredRows * desiredCols)
     {
         goodMatrixShape = true;
     }
@@ -50,13 +50,16 @@ bool Propulsion::Tensor<type>::reshape(std::deque<unsigned long long> reshapeDim
     if(desiredMatrices == currentMatrices && goodMatrixShape)
     {
         // Change all Matrices to desired size.
+        ///TODO: No need to run this every time...
         for(unsigned long long i = 0; i < this->tensor.size(); i++)
         {
             this->tensor[i]->reshape(desiredRows, desiredCols);
         }
 
         // Set dims to the desired dims.
-        this->dims = reshapeDims;
+        this->dims.clear();
+        for(unsigned long long reshapeDim : reshapeDims)
+            this->dims.push_back(reshapeDim);
 
         return true;
     }

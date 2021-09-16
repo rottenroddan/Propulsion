@@ -173,6 +173,8 @@ TensorDimensionOperations.cu
 C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorDimensionOperations.cu
 TensorDotProduct.cu
 C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorDotProduct.cu
+TensorInsertMethods.cu
+C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorInsertMethods.cu
 TensorVectorOperations.cu
 C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorVectorOperations.cu
 
@@ -193,6 +195,10 @@ iostream
 -
 string
 -
+
+C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorInsertMethods.cu
+../Propulsion.cuh
+C:/Users/steve/CLionProjects/Propulsion/Propulsion.cuh
 
 C:/Users/steve/CLionProjects/Propulsion/Tensor/TensorVectorOperations.cu
 

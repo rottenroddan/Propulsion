@@ -23,6 +23,7 @@ CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorCopy.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorDimensionOperations.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorDotProduct.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorHelpers.cu
+CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorInsertMethods.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\Tensor\TensorVectorOperations.cu
 CMakeFiles\Propulsion.dir\main.cu.obj: ..\main.cu
 

@@ -66,14 +66,12 @@ void Propulsion::ArtificialNeuralNetwork::Softmax::forward(std::shared_ptr<Tenso
     Matrix<double> m(arr, 4, 3);
 
     Tensor<double> t(1,3,3);
-    *t.matrixAt(0) = m;
+    *t.matrixAt(0) = m; // bad
 
     t.print();
 
-    Tensor<double> test(arr, 4, 3);
+    Tensor<double> test;
 
-    test.print();
-    std::deque<unsigned long long> newDims = {1,3,4};
-    test.reshape(newDims);
+    test.push_back(m);
     test.print();
 }

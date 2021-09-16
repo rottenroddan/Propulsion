@@ -267,7 +267,7 @@ public:
         }
     }
 
-    bool reshape(std::deque<unsigned long long> reshapeDims);
+    bool reshape(const std::deque<unsigned long long>& reshapeDims);
 
     void push_back(const Matrix<type>& m);
 
@@ -1224,6 +1224,7 @@ public:
             return retDeque;
         }
         else if(this->dims.size() == 1) {
+            retDeque.push_back(1);
             retDeque.push_back(this->dims[0]);
         }
         else {
@@ -1382,4 +1383,5 @@ public:
 #include "TensorCopy.cu"
 #include "TensorDimensionOperations.cu"
 #include "TensorDotProduct.cu"
+#include "TensorInsertMethods.cu"
 #include "TensorVectorOperations.cu"

@@ -22,7 +22,7 @@ std::string getDimsExceptionString(const std::deque<unsigned long long>& dims)
     return err;
 }
 
-unsigned long long getTotalMatricesFromDims(std::deque<unsigned long long>& dims)
+unsigned long long getTotalMatricesFromDims(const std::deque<unsigned long long>& dims)
 {
     if(dims.size() == 0)
     {

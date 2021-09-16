@@ -681,21 +681,21 @@ namespace Propulsion {
          *
          * @return      Unsigned Column size.
          */
-        unsigned getColSize();
+        unsigned getColSize() const;
 
         /**
          * \brief           Returns row size of the this.
          *
          * @return      Unsigned Row size.
          */
-        unsigned getRowSize();
+        unsigned getRowSize() const;
 
         /**
          * \brief           Returns the total size of the matrix.
          *
          * @return      Unsigned Total Size(Rows * Cols)
          */
-        unsigned getTotalSize();
+        unsigned getTotalSize() const;
 
         /**
          * \brief           Checks if the Matrix B is equal to this.
